@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Na Kontaktoni - Kerko Auto{% endblock %}
+{% block meta_description %}Na kontaktoni përmes telefonit, WhatsApp, Instagram ose formularit të kontaktit. Jemi këtu për t'ju ndihmuar me çdo pyetje.{% endblock %}
+
+{% block content %}
+<main>
+    <div class="contact-hero">
+        <h1 class="contact-hero-title">Na kontaktoni</h1>
+        <p class="contact-hero-subtitle">Keni pyetje? Jemi këtu për t'ju ndihmuar.</p>
+    </div>
+
+    <div class="container contact-grid">
+        
+        <div class="contact-channels-grid">
+            
+            <a href="tel:+3556603603" class="contact-channel-link">
+                <div class="contact-channel-card">
+                    <i class="fa-solid fa-phone contact-channel-icon contact-channel-icon--green"></i>
+                    <span class="contact-channel-name">Telefoni</span>
+                    <p class="contact-channel-detail">+355 660 3603</p>
+                </div>
+            </a>
+
+            <a href="https://wa.me/3556603603" target="_blank" class="contact-channel-link">
+                <div class="contact-channel-card">
+                    <i class="fa-brands fa-whatsapp contact-channel-icon contact-channel-icon--whatsapp"></i>
+                    <span class="contact-channel-name">WhatsApp</span>
+                    <p class="contact-channel-detail">Bisedo tani</p>
+                </div>
+            </a>
+
+            <a href="https://instagram.com/kerkoauto" target="_blank" class="contact-channel-link">
+                <div class="contact-channel-card">
+                    <i class="fa-brands fa-instagram contact-channel-icon contact-channel-icon--green"></i>
+                    <span class="contact-channel-name">Instagram</span>
+                    <p class="contact-channel-detail">@kerkoauto</p>
+                </div>
+            </a>
+
+            <a href="https://facebook.com/kerkoauto" target="_blank" class="contact-channel-link">
+                <div class="contact-channel-card">
+                    <i class="fa-brands fa-facebook-f contact-channel-icon contact-channel-icon--green"></i>
+                    <span class="contact-channel-name">Facebook</span>
+                    <p class="contact-channel-detail">Kerko Auto</p>
+                </div>
+            </a>
+
+        </div>
+
+        <div class="contact-form-box">
+            <h3 class="contact-form-title">Na shkruani një mesazh</h3>
+            <form action="{{ url_for('contact') }}" method="POST" class="contact-form">
+                <div class="contact-form-row">
+                    <div class="contact-form-field">
+                        <label class="contact-form-label">Emri juaj</label>
+                        <input type="text" name="name" placeholder="Shkruaj emrin" required class="contact-form-input">
+                    </div>
+                    <div class="contact-form-field">
+                        <label class="contact-form-label">Email juaj</label>
+                        <input type="email" name="email" placeholder="Shkruaj email-in" required class="contact-form-input">
+                    </div>
+                </div>
+                <div>
+                    <label class="contact-form-label">Subjekti</label>
+                    <input type="text" name="subject" placeholder="Për çfarë na kontaktoni?" class="contact-form-input">
+                </div>
+                <div>
+                    <label class="contact-form-label">Mesazhi</label>
+                    <textarea name="message" rows="5" placeholder="Shkruani mesazhin tuaj këtu..." required class="contact-form-textarea"></textarea>
+                </div>
+                <button type="submit" class="btn-primary contact-form-submit">Dërgo Mesazhin</button>
+            </form>
+        </div>
+
+    </div>
+</main>
+{% endblock %}

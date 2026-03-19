@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard - Kerko Auto{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <aside class="sidebar">
+        <img src="{{ url_for('static', filename='images/logo-white.png') }}" alt="Logo" height="35" style="margin-bottom:40px;">
+        <a href="#dashboard" class="sidebar-link active"><i class="fa-solid fa-gauge"></i> Dashboard</a>
+        <a href="#requests" class="sidebar-link"><i class="fa-solid fa-car-side"></i> Post Requests</a>
+        <a href="#blog" class="sidebar-link"><i class="fa-solid fa-pen-nib"></i> Blog</a>
+        <a href="{{ url_for('home') }}" class="sidebar-link" style="margin-top:50px;color:#ff4d4d;"><i class="fa-solid fa-right-from-bracket"></i> Dil</a>
+    </aside>
+
+    <main class="main-content">
+        <header style="display:flex;justify-content:space-between;margin-bottom:30px;">
+            <h2>Admin Dashboard</h2>
+            <div style="font-weight:600;">Mirëseveini, Admin 👋</div>
+        </header>
+
+        <!-- Stats -->
+        <div id="dashboard" style="display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-bottom:40px;">
+            <div style="background:white;padding:25px;border-radius:16px;border-left:5px solid var(--primary-green);">
+                <h4 style="color:gray;font-size:13px;">Post Requests</h4>
+                <p style="font-size:28px;font-weight:bold;">{{ stats.pending }}</p>
+            </div>
+            <div style="background:white;padding:25px;border-radius:16px;border-left:5px solid #333;">
+                <h4 style="color:gray;font-size:13px;">Total Blogs</h4>
+                <p style="font-size:28px;font-weight:bold;">{{ stats.total_blogs }}</p>
+            </div>
+            <div style="background:white;padding:25px;border-radius:16px;border-left:5px solid #007bff;">
+                <h4 style="color:gray;font-size:13px;">Makina Aktive</h4>
+                <p style="font-size:28px;font-weight:bold;">{{ stats.total_cars }}</p>
+            </div>
+            <div style="background:white;padding:25px;border-radius:16px;border-left:5px solid #f0ad4e;">
+                <h4 style="color:gray;font-size:13px;">Përdorues</h4>
+                <p style="font-size:28px;font-weight:bold;">{{ stats.total_users }}</p>
+            </div>
+        </div>
+
+        <!-- Post Requests -->
+        <section id="requests" style="margin-bottom:50px;">
+            <h3 style="margin-bottom:20px;">Review Post Requests</h3>
+            <table class="admin-table">
+                <thead>
+                    <tr><th>Mjeti</th><th>Përdoruesi</th><th>Data</th><th>Veprimi</th></tr>
+                </thead>
+                <tbody>
+                    {% for car in pending %}
+                    <tr>
+                        <td><strong>{{ car.marka }} {{ car.modeli }} {% if car.viti %}({{ car.viti }}){% endif %}</strong></td>
+                        <td>{{ car.first_name }} {{ car.last_name }}</td>
+                        <td>{{ car.created_at[:10] }}</td>
+                        <td style="display:flex;gap:8px;flex-wrap:wrap;">
+                            <form action="{{ url_for('admin_car_action', car_id=car.id, action='confirm') }}" method="POST">
+                                <button type="submit" class="btn-primary" style="padding:5px 12px;font-size:12px;">Konfirmo</button>
+                            </form>
+                            <form action="{{ url_for('admin_car_action', car_id=car.id, action='decline') }}" method="POST">
+                                <button type="submit" style="background:#f8d7da;color:#721c24;border:none;padding:5px 12px;border-radius:20px;font-size:12px;cursor:pointer;">Refuzo</button>
+                            </form>
+                            <form action="{{ url_for('admin_car_action', car_id=car.id, action='delete') }}" method="POST" onsubmit="return confirm('Fshij përgjithmonë?')">
+                                <button type="submit" style="background:#eee;border:none;padding:5px 12px;border-radius:20px;font-size:12px;cursor:pointer;">Fshij</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="4" style="text-align:center;color:gray;padding:30px;">Nuk ka kërkesa në pritje.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Blog Management -->
+        <section id="blog">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                <h3>Menaxho Blogun</h3>
+                <button class="btn-primary" onclick="document.getElementById('add-blog-form').style.display='block'">+ Shto Blog të Ri</button>
+            </div>
+
+            <!-- Add Blog Form -->
+            <div id="add-blog-form" style="display:none;background:white;padding:25px;border-radius:12px;margin-bottom:25px;border:1px solid #eee;">
+                <h4 style="margin-bottom:15px;">Shto Artikull të Ri</h4>
+                <form action="{{ url_for('admin_blog_add') }}" method="POST" enctype="multipart/form-data" style="display:flex;flex-direction:column;gap:12px;">
+                    <input type="text" name="title" placeholder="Titulli" required style="padding:10px;border:1px solid #ddd;border-radius:6px;">
+                    <input type="text" name="category" placeholder="Kategoria (p.sh. TË REJAT)" style="padding:10px;border:1px solid #ddd;border-radius:6px;">
+                    <textarea name="content" rows="6" placeholder="Përmbajtja..." required style="padding:10px;border:1px solid #ddd;border-radius:6px;resize:vertical;"></textarea>
+                    <input type="file" name="image" accept="image/*" style="padding:10px;">
+                    <div style="display:flex;gap:10px;">
+                        <button type="submit" class="btn-primary">Publiko</button>
+                        <button type="button" onclick="document.getElementById('add-blog-form').style.display='none'" style="padding:10px 20px;border:1px solid #ddd;border-radius:20px;background:none;cursor:pointer;">Anulo</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Blog List -->
+            <div class="grid-4" style="gap:15px;">
+                {% for post in blogs %}
+                <div style="background:white;border-radius:8px;overflow:hidden;border:1px solid #ddd;">
+                    {% if post.image %}
+                    <img src="{{ url_for('static', filename='images/uploads/' + post.image) }}" style="width:100%;height:120px;object-fit:cover;">
+                    {% else %}
+                    <div style="width:100%;height:120px;background:#f0f0f0;display:flex;align-items:center;justify-content:center;"><i class="fa-solid fa-image" style="color:#ccc;font-size:30px;"></i></div>
+                    {% endif %}
+                    <div style="padding:10px;">
+                        <h5 style="margin-bottom:10px;font-size:13px;">{{ post.title[:40] }}{% if post.title|length > 40 %}...{% endif %}</h5>
+                        <p style="font-size:11px;color:gray;margin-bottom:8px;">{{ post.created_at[:10] }}</p>
+                        <form action="{{ url_for('admin_blog_delete', blog_id=post.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Fshij këtë artikull?')">
+                            <button type="submit" style="font-size:11px;color:red;border:none;background:none;cursor:pointer;">Fshij</button>
+                        </form>
+                    </div>
+                </div>
+                {% else %}
+                <p style="grid-column:span 4;color:gray;text-align:center;padding:30px;">Nuk ka artikuj ende.</p>
+                {% endfor %}
+            </div>
+        </section>
+    </main>
+</div>
+{% endblock %}

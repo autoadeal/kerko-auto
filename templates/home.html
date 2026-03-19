@@ -1,0 +1,342 @@
+{% extends "base.html" %}
+{% block title %}Kerko Auto - Kryefaqja{% endblock %}
+{% block header_class %}transparent-bg{% endblock %}
+
+{% block content %}
+<main>
+
+    <!-- ===== HERO + SEARCH WIDGET ===== -->
+    <section class="hero" style="background-image: url('{{ url_for('static', filename='images/hero-bg.jpg') }}'); padding: 100px 5% 0; flex-direction: column; align-items: center; gap: 0; min-height: 435px;">
+
+        <!-- Hero Text (animated) -->
+        <div class="hero-text-block" id="heroText" style="margin-top: -20px; margin-bottom: 30px;">
+            <span class="hero-label">Gjej makinën tënde ideale!</span>
+            <h1 class="hero-headline">Në kërkim të një makine?<br>Je në vendin e duhur.</h1>
+            <div class="hero-pills">
+                <div class="hero-pill">
+                    <i class="fa-solid fa-layer-group"></i>
+                    <span>Zgjedhje te pafundme</span>
+                </div>
+                <div class="hero-pill">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <span>Kërkim i saktë</span>
+                </div>
+                <div class="hero-pill">
+                    <i class="fa-solid fa-handshake"></i>
+                    <span>Lidhje direkte</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search Widget: overlaps hero bottom edge -->
+        <div class="search-widget search-widget-elevated" style="margin-bottom: -62px;">
+            <div class="search-nav">
+                <a href="{{ url_for('vehicles') }}" class="search-tab-all">
+                    <i class="fa-solid fa-car-side" style="color: var(--primary-green);"></i> Të gjitha
+                </a>
+                <a href="{{ url_for('contact') }}" class="need-help-link">
+                    <i class="fa-regular fa-comment-dots"></i> Ke nevojë për ndihmë?
+                </a>
+            </div>
+
+            <form action="{{ url_for('vehicles') }}" method="GET" class="search-form-row">
+                <div class="filter-box">
+                    <label>Marka</label>
+                    <select name="marka" id="filterMarka" onchange="populateModels('filterMarka', 'filterModeli')">
+                        <option value="">Çdo markë</option>
+                    </select>
+                </div>
+                <div class="filter-box">
+                    <label>Modeli</label>
+                    <select name="modeli" id="filterModeli" onchange="updateYearGenerations()">
+                        <option value="">Çdo model</option>
+                    </select>
+                </div>
+                <div class="filter-box">
+                    <label>Viti</label>
+                    <select name="year_range" id="filterYear">
+                        <option value="">Çdo vit</option>
+                    </select>
+                </div>
+                <div class="filter-box">
+                    <label>Karburanti</label>
+                    <select name="karburanti">
+                        <option value="">Çdo lloj</option>
+                        <option value="Naftë">Naftë</option>
+                        <option value="Benzinë + Gaz">Benzinë / Gaz</option>
+                        <option value="Hibrid">Hibrid</option>
+                        <option value="Elektrik">Elektrik</option>
+                    </select>
+                </div>
+                <div class="filter-box">
+                    <label>Qyteti</label>
+                    <select name="location">
+                        <option value="">Çdo qytet</option>
+                        {% for city in ['Tiranë', 'Durrës', 'Vlorë', 'Elbasan', 'Shkodër', 'Fier', 'Korçë', 'Berat', 'Lezhë', 'Sarandë'] %}
+                        <option value="{{ city }}">{{ city }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn-search-main">
+                    <i class="fa-solid fa-magnifying-glass"></i> Kërko
+                </button>
+            </form>
+        </div>
+    </section>
+
+    <!-- ===== BRANDS SECTION ===== -->
+    <section class="brands-section" style="padding-top: 96px;">
+        <div class="brands-section-inner">
+            <div class="brands-header">
+                <h2>Markat</h2>
+                <a href="{{ url_for('vehicles') }}" class="see-all-link">Të gjitha <i class="fa-solid fa-arrow-right"></i></a>
+            </div>
+            <div class="brands-wrapper">
+                <button class="scroll-btn" id="scrollLeft" onclick="scrollBrands(-1)">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </button>
+                <div class="brands-grid" id="brandsGrid">
+                    {% set brands = [
+                        ('Volkswagen', 'vw.png'), ('BMW', 'bmw.png'), ('Mercedes-Benz', 'mercedes.png'), ('Audi', 'audi.png'), ('Toyota', 'toyota.png'), ('Skoda', 'skoda.png'), ('Ford', 'ford.png'),
+                        ('Renault', 'renault.png'), ('Fiat', 'fiat.png'), ('Peugeot', 'peugeot.png'), ('BYD', 'byd.png'), ('Hyundai', 'hyundai.png'), ('Kia', 'kia.png'), ('Opel', 'opel.png'), ('Citroen', 'citroen.png'),
+                        ('Dacia', 'dacia.png'), ('Volvo', 'volvo.png'), ('Seat', 'seat.png'), ('Mini', 'mini.png'), ('Land Rover', 'land-rover.png'), ('Nissan', 'nissan.png'), ('Suzuki', 'suzuki.png'), ('Mazda', 'mazda.png'),
+                        ('Jeep', 'jeep.png'), ('Lexus', 'lexus.png'), ('Alfa Romeo', 'alfa.png'), ('Tesla', 'tesla.png'), ('Honda', 'honda.png'), ('Mitsubishi', 'mitsubishi.png')
+                    ] %}
+                    {% for brand_name, filename in brands %}
+                    <a href="{{ url_for('vehicles', marka=brand_name) }}" class="brand-item">
+                        <div class="brand-box">
+                            <img src="{{ url_for('static', filename='images/brands/' + filename) }}" alt="{{ brand_name }}">
+                        </div>
+                        <span class="brand-name">{{ brand_name }}</span>
+                    </a>
+                    {% endfor %}
+                </div>
+                <button class="scroll-btn" id="scrollRight" onclick="scrollBrands(1)">
+                    <i class="fa-solid fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== MË TË KËRKUARAT ===== -->
+    <section class="most-wanted-section">
+        <div class="section-header">
+            <div>
+                <h2>Më të kërkuarat</h2>
+                <span class="section-sub">Top 10 e javës</span>
+            </div>
+            <a href="{{ url_for('vehicles') }}" class="btn-shiko-me-shume">Të gjitha <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+        <div class="grid-5">
+            {% for car in most_wanted %}
+            <a href="{{ url_for('vehicle_details', car_id=car.id) }}" class="car-listing-card">
+                <div class="car-listing-image-wrap">
+                    {% if car.main_image %}
+                        <img src="{{ url_for('static', filename='images/uploads/' + car.main_image) }}" alt="{{ car.marka }} {{ car.modeli }}{% if car.viti %} {{ car.viti }}{% endif %} për shitje{% if car.location %} — {{ car.location }}{% endif %}">
+                    {% else %}
+                        <img src="{{ url_for('static', filename='images/car-placeholder.jpg') }}" alt="{{ car.marka }} {{ car.modeli }}">
+                    {% endif %}
+                </div>
+                <div class="car-listing-body">
+                    <h4 class="car-listing-title">{{ car.marka }} {{ car.modeli }}</h4>
+                    <div class="car-listing-location">
+                        <i class="fa-solid fa-location-dot"></i>
+                        {{ car.location if car.location else 'Shqipëri' }}
+                    </div>
+                    <div class="car-listing-divider"></div>
+                    <div class="car-listing-specs">
+                        <div class="spec-item">
+                            <i class="fa-regular fa-calendar"></i>
+                            <div>
+                                <span class="spec-label">Viti</span>
+                                <span class="spec-value">{{ car.viti if car.viti else '—' }}</span>
+                            </div>
+                        </div>
+                        <div class="spec-item">
+                            <i class="fa-solid fa-gas-pump"></i>
+                            <div>
+                                <span class="spec-label">Karburanti</span>
+                                <span class="spec-value">{{ car.karburant if car.karburant else '—' }}</span>
+                            </div>
+                        </div>
+                        <div class="spec-item">
+                            <i class="fa-solid fa-gears"></i>
+                            <div>
+                                <span class="spec-label">Kambio</span>
+                                <span class="spec-value">{{ car.kambio if car.kambio else '—' }}</span>
+                            </div>
+                        </div>
+                        <div class="spec-item">
+                            <i class="fa-solid fa-road"></i>
+                            <div>
+                                <span class="spec-label">Km</span>
+                                <span class="spec-value">{{ "{:,.0f}".format(car.km) if car.km else '—' }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="car-listing-footer">
+                        <span class="car-listing-price">€{{ "{:,.0f}".format(car.cmimi) }}</span>
+                        <span class="btn-bli-tani">Bli tani</span>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- ===== KËRKO SIPAS LLOJIT ===== -->
+    <section class="shape-section">
+        <div class="shape-section-inner">
+            <div class="shape-header">
+                <h2>Kërko sipas Llojit</h2>
+            </div>
+            <div class="shape-grid">
+                {% set shapes = [
+                    ('Hatchback', 'hatchback'),
+                    ('Sedan', 'sedan'),
+                    ('Wagon', 'wagon'),
+                    ('SUV', 'suv'),
+                    ('MPV', 'mpv')
+                ] %}
+                {% for shape_label, shape_val in shapes %}
+                <a href="{{ url_for('vehicles', lloji=shape_label) }}" class="shape-card">
+                    <div class="shape-img-wrap">
+                        <img src="{{ url_for('static', filename='images/shapes/' + shape_val + '.jpg') }}"
+                             alt="{{ shape_label }}"
+                             onload="this.nextElementSibling.style.display='none';"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="shape-icon-fallback">
+                            <i class="fa-solid fa-car-side"></i>
+                        </div>
+                    </div>
+                    <div class="shape-footer">
+                        <span class="shape-name">{{ shape_label }}</span>
+                        <i class="fa-solid fa-circle-arrow-right shape-arrow"></i>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== BLOGS ===== -->
+    <section class="home-blog-section">
+        <div class="home-blog-inner">
+            <div class="home-blog-header">
+                <h2>Blog</h2>
+                <a href="{{ url_for('blog') }}" class="btn-shiko-me-shume">Shiko më shumë <i class="fa-solid fa-arrow-right"></i></a>
+            </div>
+            <div class="home-blog-grid home-blog-grid-4">
+                {% if blogs %}
+                    {% for post in blogs %}
+                    <a href="{{ url_for('blog_post', blog_id=post.id) }}" class="home-blog-card">
+                        <div class="home-blog-img-wrap">
+                            {% if post.image %}
+                                <img src="{{ url_for('static', filename='images/uploads/' + post.image) }}" alt="{{ post.title }}">
+                            {% else %}
+                                <div class="blog-img-placeholder"><i class="fa-solid fa-newspaper"></i></div>
+                            {% endif %}
+                        </div>
+                        <div class="home-blog-overlay">
+                            <div class="home-blog-text">
+                                <span class="home-blog-title">{{ post.title }}</span>
+                                <span class="home-blog-hook">Lexo më shumë...</span>
+                            </div>
+                            <div class="home-blog-arrow">
+                                <i class="fa-solid fa-circle-arrow-right"></i>
+                            </div>
+                        </div>
+                    </a>
+                    {% endfor %}
+                {% else %}
+                    {% for i in range(4) %}
+                    <a href="{{ url_for('blog') }}" class="home-blog-card">
+                        <div class="home-blog-img-wrap">
+                            <div class="blog-img-placeholder"><i class="fa-solid fa-newspaper"></i></div>
+                        </div>
+                        <div class="home-blog-overlay">
+                            <div class="home-blog-text">
+                                <span class="home-blog-title">Titulli...</span>
+                                <span class="home-blog-hook">Lexo artikullin e fundit</span>
+                            </div>
+                            <div class="home-blog-arrow">
+                                <i class="fa-solid fa-circle-arrow-right"></i>
+                            </div>
+                        </div>
+                    </a>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== PSE TË NA ZGJIDHNI NE? ===== -->
+    <section class="why-us-section">
+        <div class="why-us-inner">
+            <div class="why-us-header">
+                <h2>Pse të na zgjidhni ne?</h2>
+                <p class="why-us-sub">Platforma shqiptare e makinave që punon për ty</p>
+            </div>
+            <div class="why-us-grid">
+                <div class="why-card">
+                    <div class="why-icon-wrap"><i class="fa-solid fa-headset"></i></div>
+                    <h4>Asistencë e Dedikuar 24/7</h4>
+                    <p>Nëse keni vështirësi në ngarkimin e fotove apo plotësimin e të dhënave teknike, ekipi ynë është online në çdo kohë.</p>
+                    <div class="why-card-accent"></div>
+                </div>
+                <div class="why-card featured">
+                    <div class="why-icon-wrap"><i class="fa-solid fa-bolt"></i></div>
+                    <h4>Publikim pa Mundim</h4>
+                    <p>Procesi i shtimit të njoftimit është i thjeshtësuar në maksimum për t'ju kursyer kohë.</p>
+                    <div class="why-card-accent"></div>
+                </div>
+                <div class="why-card">
+                    <div class="why-icon-wrap"><i class="fa-solid fa-eye"></i></div>
+                    <h4>Vizibilitet i Lartë</h4>
+                    <p>Ndryshe nga platformat e përgjithshme sociale, faqja jonë është destinacion specifik për blerësit seriozë të makinave.</p>
+                    <div class="why-card-accent"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {% block structured_data %}
+    <script type="application/ld+json">
+    {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Kerko Auto",
+    "url": "{{ request.host_url }}",
+    "logo": "{{ request.host_url }}static/images/logo.png",
+    "contactPoint": {
+        "@type": "ContactPoint",
+        "telephone": "+355-66-036-03",
+        "contactType": "customer service",
+        "availableLanguage": "Albanian"
+    },
+    "sameAs": [
+        "https://www.instagram.com/kerkoauto",
+        "https://www.facebook.com/KerkoAuto",
+        "https://tiktok.com/@kerkoauto"
+    ]
+    }
+    </script>
+    {% endblock %}
+
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Hero text entrance animation
+document.addEventListener('DOMContentLoaded', function () {
+    const heroText = document.getElementById('heroText');
+    if (heroText) {
+        // small delay so the page has painted
+        setTimeout(() => {
+            heroText.classList.add('hero-text-visible');
+        }, 80);
+    }
+});
+</script>
+{% endblock %}

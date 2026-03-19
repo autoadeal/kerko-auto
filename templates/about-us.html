@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}Rreth Nesh - Kerko Auto{% endblock %}
+{% block meta_description %}Mëso më shumë rreth Kerko Auto — platforma lider shqiptare për shitblerjen e automjeteve. Misioni, vlerat dhe çfarë ofrojmë.{% endblock %}
+
+{% block content %}
+<main>
+
+    <div class="container about-container">
+        
+        <div class="about-section-header">
+            <i class="fa-solid fa-circle-info"></i>
+            <h1>Rreth Nesh</h1>
+        </div>
+
+        <div class="content-box about-hero-grid">
+            <div class="about-logo-wrapper">
+                <img src="{{ url_for('static', filename='images/logo-white.png') }}" alt="Logo">
+            </div>
+            
+            <div>
+                <h3 class="about-brand-title">Kerko Auto</h3>
+                <p class="about-body-text">
+                    Kerko Auto është platforma lider në Shqipëri për shitblerjen e automjeteve. Ne u themeluam me një qëllim të vetëm: të krijojmë një urë lidhëse të sigurt, të shpejtë dhe transparente për çdo përdorues që kërkon makinën e tij të ëndrrave ose dëshiron të shesë mjetin aktual.
+                </p>
+            </div>
+        </div>
+
+        <div class="about-section-header">
+            <i class="fa-solid fa-bullseye"></i>
+            <h2>Misioni Ynë</h2>
+        </div>
+        <div class="content-box">
+            <p class="about-mission-text">
+                Të lidhim blerësit dhe shitësit përmes një platforme teknologjike të avancuar, duke thjeshtuar procesin e tregtimit të automjeteve. Ne besojmë se blerja e një makine nuk duhet të jetë një stres, por një eksperiencë e bukur dhe e sigurt për këdo.
+            </p>
+        </div>
+
+        <div class="about-section-header">
+            <i class="fa-solid fa-circle-question"></i>
+            <h2>Pse Kerko Auto?</h2>
+        </div>
+        <div class="pse-grid">
+            <div class="offer-card">
+                <i class="fa-solid fa-bolt about-card-icon"></i>
+                <h4>Shpejtësi</h4>
+                <p>Postoni njoftimin tuaj në pak minuta dhe merrni oferta menjëherë.</p>
+            </div>
+            <div class="offer-card">
+                <i class="fa-solid fa-eye about-card-icon"></i>
+                <h4>Transparencë</h4>
+                <p>Navigim i qartë dhe informacion i detajuar për çdo mjet të listuar.</p>
+            </div>
+            <div class="offer-card pse-last">
+                <i class="fa-solid fa-headset about-card-icon"></i>
+                <h4>Suport i Dedikuar</h4>
+                <p>Jemi gjithmonë këtu për t'ju ndihmuar në çdo hap të procesit.</p>
+            </div>
+        </div>
+
+        <div class="about-section-header">
+            <i class="fa-solid fa-star"></i>
+            <h2>Çfarë Ofrojmë</h2>
+        </div>
+        <div class="ofrojme-grid">
+            <div class="offer-card">
+                <i class="fa-solid fa-car about-card-icon"></i>
+                <h4>Shumëllojshmëri</h4>
+                <p>Mijëra makina të reja dhe të përdorura në një vend.</p>
+            </div>
+            <div class="offer-card">
+                <i class="fa-solid fa-user-shield about-card-icon"></i>
+                <h4>Siguri</h4>
+                <p>Kontroll manual i çdo postimi për sigurinë tuaj.</p>
+            </div>
+            <div class="offer-card">
+                <i class="fa-solid fa-wand-magic-sparkles about-card-icon"></i>
+                <h4>Thjeshtësi</h4>
+                <p>Platformë miqësore për çdo moshë dhe pajisje.</p>
+            </div>
+            <div class="offer-card">
+                <i class="fa-solid fa-sliders about-card-icon"></i>
+                <h4>Filtra të Avancuar</h4>
+                <p>Gjeni mjetin ekzakt përmes kërkimit të detajuar.</p>
+            </div>
+            <div class="offer-card">
+                <i class="fa-solid fa-mobile-screen-button about-card-icon"></i>
+                <h4>Mobile First</h4>
+                <p>Eksperiencë e shkëlqyer në smartphone dhe tablet.</p>
+            </div>
+            <div class="offer-card">
+                <i class="fa-solid fa-check-double about-card-icon"></i>
+                <h4>Verifikim</h4>
+                <p>Partneritete me shitës të besuar dhe konfirmuar.</p>
+            </div>
+            <div class="offer-card">
+                <i class="fa-solid fa-tags about-card-icon"></i>
+                <h4>Pa Komisione</h4>
+                <p>Lidhje direkte mes blerësit dhe shitësit pa kosto shtesë.</p>
+            </div>
+            <div class="offer-card">
+                <i class="fa-solid fa-clock-rotate-left about-card-icon"></i>
+                <h4>Histori</h4>
+                <p>Transparencë mbi historikun e mjeteve të listuara.</p>
+            </div>
+        </div>
+
+    </div>
+</main>
+{% endblock %}

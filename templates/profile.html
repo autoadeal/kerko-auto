@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Profili Im - Kerko Auto{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <aside class="sidebar">
+        <div style="text-align:center;margin-bottom:30px;">
+            <div style="width:80px;height:80px;background:var(--primary-green);border-radius:50%;margin:0 auto 10px;display:flex;align-items:center;justify-content:center;font-size:30px;">👤</div>
+            <h4>{{ user.first_name }} {{ user.last_name }}</h4>
+        </div>
+        <a href="#profile-section" class="sidebar-link active"><i class="fa-solid fa-user"></i> Profili Im</a>
+        <a href="#cars-section" class="sidebar-link"><i class="fa-solid fa-car"></i> Makinat e Mia</a>
+        <a href="{{ url_for('home') }}" class="sidebar-link" style="margin-top:50px;"><i class="fa-solid fa-house"></i> Kthehu</a>
+        <a href="{{ url_for('logout') }}" class="sidebar-link" style="color:#ff4d4d;"><i class="fa-solid fa-right-from-bracket"></i> Dil</a>
+    </aside>
+
+    <main class="main-content">
+        <div style="max-width:900px;">
+
+            <div id="profile-section" style="background:white;padding:30px;border-radius:16px;margin-bottom:30px;">
+                <h3 style="margin-bottom:20px;">Të dhënat Personale</h3>
+                <form action="{{ url_for('profile') }}" method="POST" style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+                    <div>
+                        <label style="font-size:13px;color:gray;">Emri</label>
+                        <input type="text" name="first_name" value="{{ user.first_name }}" required style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;margin-top:4px;">
+                    </div>
+                    <div>
+                        <label style="font-size:13px;color:gray;">Mbiemri</label>
+                        <input type="text" name="last_name" value="{{ user.last_name }}" required style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;margin-top:4px;">
+                    </div>
+                    <div style="grid-column:span 2;">
+                        <label style="font-size:13px;color:gray;">Email</label>
+                        <input type="email" name="email" value="{{ user.email }}" required style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;margin-top:4px;">
+                    </div>
+                    <button type="submit" class="btn-primary" style="width:fit-content;">Ruaj Ndryshimet</button>
+                </form>
+            </div>
+
+            <div id="cars-section">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                    <h3>Makinat e Mia</h3>
+                    <a href="{{ url_for('add_car') }}" class="btn-primary">+ Shto Mjet</a>
+                </div>
+                <div style="background:white;border-radius:16px;overflow:hidden;">
+                    <table class="admin-table" style="box-shadow:none;">
+                        <thead>
+                            <tr>
+                                <th>Mjeti</th>
+                                <th>Data</th>
+                                <th>Statusi</th>
+                                <th>Veprimi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for car in cars %}
+                            <tr>
+                                <td><strong>{{ car.marka }} {{ car.modeli }}</strong></td>
+                                <td>{{ car.created_at[:10] }}</td>
+                                <td>
+                                    {% if car.status == 'confirmed' %}
+                                        <span class="status status-confirmed">I Publikuar</span>
+                                    {% elif car.status == 'pending' %}
+                                        <span class="status status-pending">Në Rishikim</span>
+                                    {% else %}
+                                        <span class="status status-declined">Refuzuar</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if car.status == 'confirmed' %}
+                                    <a href="{{ url_for('vehicle_details', car_id=car.id) }}" style="font-size:12px;color:var(--primary-green);">Shiko</a>
+                                    {% endif %}
+                                    <form action="{{ url_for('delete_car', car_id=car.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Jeni i sigurt?')">
+                                        <button type="submit" style="font-size:12px;color:red;border:none;background:none;cursor:pointer;margin-left:8px;">Fshij</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="4" style="text-align:center;color:gray;padding:30px;">Nuk keni postuar asnjë mjet ende.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </main>
+</div>
+{% endblock %}

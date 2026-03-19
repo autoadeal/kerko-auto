@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block meta_description %}{{ post.content | striptags | truncate(155, true, '...') }}{% endblock %}
+{% block og_title %}{{ post.title }} | Kerko Auto{% endblock %}
+{% block og_image %}{% if post.image %}{{ request.host_url }}static/images/uploads/{{ post.image }}{% else %}{{ request.host_url }}static/images/og-default.jpg{% endif %}{% endblock %}
+{% block title %}{{ post.title }} - Kerko Auto{% endblock %}
+{% block header_class %}white-bg{% endblock %}
+
+{% block content %}
+<main>
+    <article class="container blog-post-container">
+
+        <p class="blog-post-meta-bar">
+            <a href="{{ url_for('blog') }}" class="blog-post-back"><i class="fa-solid fa-arrow-left"></i> Kthehu te Blogu</a>
+            &nbsp;|&nbsp; {{ post.category or 'BLOG' }}
+        </p>
+
+        <h1 class="blog-post-title">{{ post.title }}</h1>
+
+        <div class="blog-post-date">
+            <span><i class="fa-regular fa-calendar"></i> {{ post.created_at[:10] }}</span>
+        </div>
+
+        {% if post.image %}
+        <img src="{{ url_for('static', filename='images/uploads/' + post.image) }}" alt="{{ post.title }}"
+             class="blog-post-image">
+        {% endif %}
+
+        <div class="blog-post-content">
+            {{ post.content }}
+        </div>
+
+        <!-- Share bar -->
+        <div style="background: #f9f9f9; border-radius: 12px; padding: 25px; margin: 40px 0; text-align: center;">
+            <p style="font-size: 15px; color: #333; margin-bottom: 15px;">Jeni duke kërkuar makinën tuaj të ardhshme?</p>
+            <a href="{{ url_for('vehicles') }}" class="btn-primary">Shiko të gjitha makinat</a>
+        </div>
+        <div class="blog-post-share-bar">
+            <span class="blog-post-share-label">Shpërndaje:</span>
+
+            <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.url }}" target="_blank"
+               class="share-btn"><i class="fa-brands fa-facebook-f"></i></a>
+
+            <a href="https://wa.me/?text={{ post.title }} {{ request.url }}" target="_blank"
+               class="share-btn"><i class="fa-brands fa-whatsapp"></i></a>
+
+            <!-- Instagram doesn't support direct URL sharing — opens profile as standard practice -->
+            <a href="https://www.instagram.com/kerkoauto" target="_blank"
+               class="share-btn" title="Na ndiq në Instagram"><i class="fa-brands fa-instagram"></i></a>
+
+            <button onclick="copyPostLink(this)" class="share-btn share-btn-copy" title="Kopjo linkun">
+                <i class="fa-solid fa-link"></i>
+            </button>
+        </div>
+    </article>
+</main>
+{% endblock %}
+
+{% block structured_data %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "{{ post.title }}",
+  "datePublished": "{{ post.created_at[:10] }}",
+  "dateModified": "{{ post.created_at[:10] }}",
+  "author": { "@type": "Organization", "name": "Kerko Auto" },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Kerko Auto",
+    "logo": { "@type": "ImageObject", "url": "{{ request.host_url }}static/images/logo.png" }
+  }
+  {% if post.image %},"image": "{{ request.host_url }}static/images/uploads/{{ post.image }}"{% endif %}
+  ,"url": "{{ request.url }}"
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Kryefaqja",
+      "item": "{{ request.host_url }}"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Blog",
+      "item": "{{ request.host_url }}blog"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "{{ post.title }}",
+      "item": "{{ request.url }}"
+    }
+  ]
+}
+</script>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function copyPostLink(btn) {
+    navigator.clipboard.writeText(window.location.href).then(() => {
+        const icon = btn.querySelector('i');
+        icon.className = 'fa-solid fa-check';
+        btn.style.background = 'var(--primary-green)';
+        btn.style.color = '#000';
+        setTimeout(() => {
+            icon.className = 'fa-solid fa-link';
+            btn.style.background = '#555';
+            btn.style.color = 'white';
+        }, 2000);
+    });
+}
+</script>
+{% endblock %}

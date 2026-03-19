@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+
+    <title>{% block title %}Kerko Auto{% endblock %}</title>
+
+    <!-- Meta Description (each page can override this block) -->
+    <meta name="description" content="{% block meta_description %}Kerko Auto — platforma lider në Shqipëri për shitblerjen e automjeteve. Gjej makinën tënde të ëndrrave ose posto mjetin tënd sot.{% endblock %}">
+
+    <!-- Canonical URL (strips query strings to avoid duplicate content) -->
+    {% block canonical_url %}<link rel="canonical" href="{{ request.url.split('?')[0] }}">{% endblock %}
+
+    <!-- Hreflang for Albanian -->
+    <link rel="alternate" hreflang="sq" href="{{ request.url }}">
+    <link rel="alternate" hreflang="x-default" href="{{ request.url }}">
+
+    <!-- Open Graph (Facebook, WhatsApp, Messenger previews) -->
+    <meta property="og:type"        content="{% block og_type %}website{% endblock %}">
+    <meta property="og:site_name"   content="Kerko Auto">
+    <meta property="og:title"       content="{% block og_title %}{% block _title_copy %}Kerko Auto{% endblock %}{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Kerko Auto — platforma lider në Shqipëri për shitblerjen e automjeteve.{% endblock %}">
+    <meta property="og:url"         content="{{ request.url }}">
+    <meta property="og:image"       content="{% block og_image %}{{ request.host_url }}static/images/og-default.jpg{% endblock %}">
+    <meta property="og:locale"      content="sq_AL">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card"        content="summary_large_image">
+    <meta name="twitter:site"        content="@kerkoauto">
+    <meta name="twitter:title"       content="{% block twitter_title %}Kerko Auto{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}Kerko Auto — platforma lider në Shqipëri për shitblerjen e automjeteve.{% endblock %}">
+    <meta name="twitter:image"       content="{% block twitter_image %}{{ request.host_url }}static/images/og-default.jpg{% endblock %}">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon-32.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/favicon-16.png') }}">
+    <link rel="apple-touch-icon"                     href="{{ url_for('static', filename='images/apple-touch-icon.png') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='images/site.webmanifest') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+
+    <header class="{% block header_class %}white-bg{% endblock %}">
+        <div class="logo">
+            <a href="{{ url_for('home') }}">
+                {% if self.header_class()|trim == 'transparent-bg' %}
+                    <img src="{{ url_for('static', filename='images/logo-transparent.png') }}" alt="Kerko Auto Logo" height="40">
+                {% else %}
+                    <img src="{{ url_for('static', filename='images/logo-white.png') }}" alt="Kerko Auto Logo" height="40">
+                {% endif %}
+            </a>
+        </div>
+        <nav>
+            <a href="{{ url_for('home') }}">Kryefaqja</a>
+            <a href="{{ url_for('vehicles') }}">Makina</a>
+            <a href="{{ url_for('blog') }}">Blog</a>
+            <a href="{{ url_for('about') }}">Rreth Nesh</a>
+            <a href="{{ url_for('contact') }}">Na Kontaktoni</a>
+        </nav>
+        <button class="hamburger" id="hamburgerBtn" aria-label="Menu" onclick="toggleMobileNav()">
+            <span></span><span></span><span></span>
+        </button>
+        <div class="header-actions">
+            <div id="auth-btn-container">
+                {% if session.user_id %}
+                    <a href="{{ url_for('profile') }}" class="btn-login"><i class="fa-solid fa-user"></i> {{ session.user_name }}</a>
+                    {% if session.is_admin %}
+                        <a href="{{ url_for('admin') }}" class="btn-login" style="color: var(--primary-green);"><i class="fa-solid fa-shield"></i> Admin</a>
+                    {% endif %}
+                {% else %}
+                    <button class="btn-login" onclick="openModal('login')"><i class="fa-solid fa-user"></i> Hyr</button>
+                {% endif %}
+            </div>
+            <a href="{{ url_for('add_car') }}" class="btn-primary">SHTO MJETIN</a>
+        </div>
+    </header>
+
+    <main>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-container">
+                    {% for category, message in messages %}
+                        <div class="flash flash-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <div class="footer-container">
+            <div class="footer-side footer-left">
+                <a href="https://wa.me/3556603603" class="footer-item" target="_blank">
+                    <i class="fa-brands fa-whatsapp"></i> <span>+355 66 036 03</span>
+                </a>
+                <a href="mailto:kerkoauto@gmail.com" class="footer-item">
+                    <i class="fa-solid fa-envelope"></i> <span>kerkoauto@gmail.com</span>
+                </a>
+                <a href="tel:+3556603603" class="footer-item">
+                    <i class="fa-solid fa-phone"></i> <span>+355 66 036 03</span>
+                </a>
+            </div>
+
+            <div class="footer-center">
+                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" height="40">
+                <div class="footer-nav">
+                    <a href="{{ url_for('about') }}">Rreth Nesh</a>
+                    <a href="{{ url_for('contact') }}">Na kontaktoni</a>
+                    <a href="{{ url_for('blog') }}">Blog</a>
+                </div>
+            </div>
+
+            <div class="footer-side footer-right">
+                <a href="https://instagram.com/kerkoauto" class="footer-item" target="_blank">
+                    <i class="fa-brands fa-instagram"></i> <span>@kerkoauto</span>
+                </a>
+                <a href="https://tiktok.com/@kerkoauto" class="footer-item" target="_blank">
+                    <i class="fa-brands fa-tiktok"></i> <span>@kerkoauto</span>
+                </a>
+                <a href="https://facebook.com/KerkoAuto" class="footer-item" target="_blank">
+                    <i class="fa-brands fa-facebook"></i> <span>Kerko Auto</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <p>© 2026 Kërko Auto. Të gjitha të drejtat e rezervuara.</p>
+        </div>
+    </footer>
+
+    <!-- Auth Modal -->
+    <div class="modal-overlay" id="authModal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal()">&times;</span>
+
+            <div class="modal-tabs">
+                <button class="modal-tab active" id="tab-login" onclick="switchTab('login')">Hyr</button>
+                <button class="modal-tab" id="tab-register" onclick="switchTab('register')">Regjistrohu</button>
+            </div>
+
+            <!-- Login Form -->
+            <div id="form-login">
+                <p style="text-align:center;font-size:12px;color:#aaa;margin-bottom:20px;">Hyr në llogarinë tënde</p>
+                <form action="{{ url_for('login') }}" method="POST" style="display:flex;flex-direction:column;gap:15px;">
+                    <input type="email" name="email" placeholder="Email" required>
+                    <input type="password" name="password" placeholder="Fjalëkalimi" required>
+                    <button type="submit" class="modal-submit-btn">Hyr</button>
+                </form>
+                <div class="modal-divider"><span>ose</span></div>
+                <a href="{{ url_for('google_login') }}" class="btn-google">
+                    <i class="fa-brands fa-google"></i> Hyr me Google
+                </a>
+            </div>
+
+            <!-- Register Form -->
+            <div id="form-register" style="display:none;">
+                <p style="text-align:center;font-size:12px;color:#aaa;margin-bottom:20px;">Krijo një llogari të re</p>
+                <form action="{{ url_for('register') }}" method="POST" style="display:flex;flex-direction:column;gap:15px;">
+                    <div style="display:flex;gap:10px;">
+                        <input type="text" name="first_name" placeholder="Emri" required>
+                        <input type="text" name="last_name" placeholder="Mbiemri" required>
+                    </div>
+                    <input type="email" name="email" placeholder="Email" required>
+                    <input type="password" name="password" placeholder="Fjalëkalimi" required>
+                    <button type="submit" class="modal-submit-btn">Regjistrohu</button>
+                </form>
+                <div class="modal-divider"><span>ose</span></div>
+                <a href="{{ url_for('google_login') }}" class="btn-google">
+                    <i class="fa-brands fa-google"></i> Regjistrohu me Google
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <button id="scrollTopBtn" onclick="scrollToTop()"><i class="fa-solid fa-arrow-up"></i></button>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+      function toggleMobileNav() {
+        var nav = document.querySelector('header nav');
+        var btn = document.getElementById('hamburgerBtn');
+        nav.classList.toggle('open');
+        btn.classList.toggle('open');
+      }
+      document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('header nav a').forEach(function(a) {
+          a.addEventListener('click', function() {
+            document.querySelector('header nav').classList.remove('open');
+            document.getElementById('hamburgerBtn').classList.remove('open');
+          });
+        });
+      });
+    </script>
+    {% block structured_data %}{% endblock %}
+    {% block scripts %}{% endblock %}
+</body>
+</html>

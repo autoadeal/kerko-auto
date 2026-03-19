@@ -1,0 +1,8 @@
+.env
+__pycache__/
+*.pyc
+static/images/uploads/*
+!static/images/uploads/.gitkeep
+.DS_Store
+venv/
+kerkoauto.db

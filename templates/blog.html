@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}Blog - Kerko Auto{% endblock %}
+
+{% block content %}
+
+<div class="blog-page-container">
+
+    <div class="blog-hero">
+        <h1>Qëndroni Para me Lajmet më të Fundit</h1>
+        <p>Zbuloni artikujt tanë mbi makinat dhe bëhuni një shofer më i informuar çdo ditë.</p>
+    </div>
+
+    <h2 class="section-title">Te fundit</h2>
+    <p class="section-subtitle">Këshilla, lajme dhe gjithçka që ju duhet për makinën tuaj. Informohuni me sugjerimet e ekspertëve tanë përmes blogut tonë javor.</p>
+
+    <div class="blog-grid">
+        {% for post in blogs[:3] %}
+            <a href="{{ url_for('blog_post', blog_id=post.id) }}" class="blog-card {% if loop.first %}dark-card{% endif %}">
+                <div class="blog-card-image-wrapper">
+                    {% if loop.first %}
+                        <span class="blog-badge">NEW</span>
+                    {% endif %}
+                    {% if post.image %}
+                        <img src="{{ url_for('static', filename='images/uploads/' ~ post.image) }}" alt="{{ post.title }}" class="blog-card-image">
+                    {% else %}
+                        <img src="{{ url_for('static', filename='images/placeholder-car.jpg') }}" alt="Placeholder" class="blog-card-image">
+                    {% endif %}
+                </div>
+                <div class="blog-card-content">
+                    {% if post.category %}
+                    <span style="font-size: 11px; font-weight: 600; color: var(--primary-green); text-transform: uppercase; letter-spacing: 0.05em;">{{ post.category }}</span>
+                    {% endif %}
+                    <h3 class="blog-card-title">{{ post.title }}</h3>
+                    <p class="blog-card-excerpt">{{ post.content | striptags | truncate(60, true, '...') }}</p>
+                </div>
+            </a>
+        {% else %}
+            <p>Nuk ka artikuj në blog për momentin.</p>
+        {% endfor %}
+    </div>
+
+    {% if blogs|length > 3 %}
+        <div class="blog-grid">
+            {% for post in blogs[3:] %}
+                <a href="{{ url_for('blog_post', blog_id=post.id) }}" class="blog-card">
+                    <div class="blog-card-image-wrapper">
+                        {% if post.image %}
+                            <img src="{{ url_for('static', filename='images/uploads/' ~ post.image) }}" alt="{{ post.title }}" class="blog-card-image">
+                        {% else %}
+                            <img src="{{ url_for('static', filename='images/placeholder-car.jpg') }}" alt="Placeholder" class="blog-card-image">
+                        {% endif %}
+                    </div>
+                    <div class="blog-card-content">
+                        {% if post.category %}
+                        <span style="font-size: 11px; font-weight: 600; color: var(--primary-green); text-transform: uppercase; letter-spacing: 0.05em;">{{ post.category }}</span>
+                        {% endif %}
+                        <h3 class="blog-card-title">{{ post.title }}</h3>
+                        <p class="blog-card-excerpt">{{ post.content | striptags | truncate(60, true, '...') }}</p>
+                    </div>
+                </a>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}

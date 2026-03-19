@@ -1,0 +1,248 @@
+{% extends "base.html" %}
+{% block title %}Shto Mjetin - Kerko Auto{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:40px;padding-bottom:60px;">
+    <div style="background:white;padding:40px;border-radius:12px;max-width:800px;margin:auto;box-shadow:0 4px 10px rgba(0,0,0,0.05);">
+        <h2 style="color:var(--primary-green);margin-bottom:5px;">Shto Mjetin Tënd</h2>
+        <p style="color:gray;font-size:14px;margin-bottom:30px;">Plotëso të dhënat. Postimi do të rishikohet nga admini para publikimit.</p>
+
+        <form action="{{ url_for('add_car') }}" method="POST" enctype="multipart/form-data" id="carForm">
+            <h4 style="margin-bottom:15px;border-bottom:1px solid #eee;padding-bottom:10px;">Të Dhënat Kryesore</h4>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
+
+                <div>
+                    <label>Marka *</label>
+                    <select name="marka" id="addMarka" required style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;margin-top:5px;"
+                            onchange="populateModels('addMarka','addModeli'); updateGenerazione();">
+                        <option value="">Zgjidh Markën</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label>Modeli *</label>
+                    <select name="modeli" id="addModeli" required style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;margin-top:5px;"
+                            onchange="updateGenerazione()">
+                        <option value="">Zgjidh Modelin</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label>Viti *</label>
+                    <input type="number" name="viti" id="addViti" required
+                           min="1990" max="2026" placeholder="p.sh. 2015"
+                           style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;margin-top:5px;"
+                           oninput="updateGenerazione()">
+                    <input type="hidden" name="generazione" id="addGenerazione">
+                    <p id="genLabel" style="font-size:11px;color:var(--primary-green);margin-top:4px;font-weight:600;min-height:16px;"></p>
+                </div>
+
+                <div>
+                    <label>Karburanti *</label>
+                    <select name="karburant" required style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;margin-top:5px;">
+                        <option value="">Zgjidh</option>
+                        <option value="Naftë">Naftë</option>
+                        <option value="Benzinë + Gaz">Benzinë / Gaz</option>
+                        <option value="Hibrid">Hibrid</option>
+                        <option value="Elektrik">Elektrik</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label>Kambio *</label>
+                    <select name="kambio" required style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;margin-top:5px;">
+                        <option value="">Zgjidh</option>
+                        <option value="Manuale">Manuale</option>
+                        <option value="Automatike">Automatike</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label>Forma *</label>
+                    <select name="forma" required style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;margin-top:5px;">
+                        <option value="">Zgjidh</option>
+                        <option value="Hatchback">Hatchback</option>
+                        <option value="Sedan">Sedan</option>
+                        <option value="Wagon">Wagon</option>
+                        <option value="SUV">SUV</option>
+                        <option value="MPV">MPV</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label>Kilometra *</label>
+                    <input type="number" name="km" placeholder="p.sh. 150000" required style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;margin-top:5px;">
+                </div>
+
+                <div>
+                    <label>Lokacioni *</label>
+                    <select name="location" required style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;margin-top:5px;">
+                        <option value="">Zgjidh Qytetin</option>
+                        {% for city in ['Tirane', 'Fier', 'Durres', 'Elbasan', 'Korce', 'Shkoder', 'Vlore', 'Berat', 'Lezhe', 'Diber', 'Kukes', 'Gjirokaster', 'Lushnje', 'Pogradec', 'Kavaje', 'Sarande'] %}
+                        <option value="{{ city }}">{{ city }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div style="grid-column:span 2;">
+                    <label>Çmimi *</label>
+                    <div style="display:flex;gap:10px;margin-top:5px;">
+                        <input type="number" name="price" id="price" placeholder="Shkruaj Çmimin" required min="101" style="flex:2;padding:10px;border:1px solid #ddd;border-radius:6px;">
+                        <select name="currency" style="flex:1;padding:10px;border:1px solid #ddd;border-radius:6px;">
+                            <option value="EUR">EUR</option>
+                            <option value="ALL">ALL</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="grid-column:span 2;">
+                    <label>Përshkrimi *</label>
+                    <textarea name="description" rows="4" placeholder="Përshkruaj mjetin tënd..." required style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;margin-top:5px;resize:vertical;"></textarea>
+                </div>
+
+                <div style="grid-column:span 2;">
+                    <label>Foto (të paktën 1, maksimum 6) *</label>
+                    <div style="border:2px dashed #ddd;padding:40px;text-align:center;border-radius:8px;margin-top:5px;">
+                        <input type="file" id="photos_input" multiple accept="image/*" style="display:none;">
+                        <label for="photos_input" id="photos_label" class="btn-primary" style="display:inline-block;cursor:pointer;">SHTO FOTO</label>
+                        <p style="font-size:12px;color:gray;margin-top:10px;">Mund të shtoni deri në 6 foto. Klikoni 'X' për të hequr.</p>
+                        <div id="photo-preview" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:15px;justify-content:center;"></div>
+                        <p id="photo-count-msg" style="font-size:12px;color:#e74c3c;margin-top:8px;display:none;"></p>
+                    </div>
+                </div>
+
+                <div style="grid-column:span 2; margin-top: 10px; padding-top: 10px; border-top: 1px solid #eee;">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+                        <div>
+                            <label>Emri *</label>
+                            <input type="text" name="contact_name" placeholder="Emri juaj" required style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;margin-top:5px;">
+                        </div>
+                        <div>
+                            <label>Numri i Kontaktit *</label>
+                            <input type="tel" name="phone" placeholder="06X XX XX XXX" required style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;margin-top:5px;">
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <button type="submit" class="btn-primary" style="width:100%;font-size:18px;padding:15px;">Posto Mjetin</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const markaSelect = document.getElementById('addMarka');
+        if (!markaSelect || typeof carData === 'undefined') return;
+        Object.keys(carData).sort().forEach(brand => {
+            const opt = document.createElement('option');
+            opt.value = brand;
+            opt.textContent = brand;
+            markaSelect.appendChild(opt);
+        });
+    });
+
+    function updateGenerazione() {
+        const marka  = document.getElementById('addMarka').value;
+        const modeli = document.getElementById('addModeli').value;
+        const year   = parseInt(document.getElementById('addViti').value, 10);
+        const genInput = document.getElementById('addGenerazione');
+        const genLabel = document.getElementById('genLabel');
+
+        genInput.value = '';
+        genLabel.textContent = '';
+
+        if (!marka || !modeli || !year) return;
+
+        // Look through generationData for a matching generation
+        if (typeof generationData !== 'undefined' &&
+            generationData[marka] && generationData[marka][modeli]) {
+
+            const gens = generationData[marka][modeli];
+            for (const gen of gens) {
+                // Extract all 4-digit years from the generation label
+                const years = gen.match(/\b(1\d{3}|2\d{3})\b/g);
+                if (!years) continue;
+                const start = parseInt(years[0], 10);
+                const end   = parseInt(years[years.length - 1], 10);
+                if (year >= start && year <= end) {
+                    genInput.value = gen;
+                    genLabel.textContent = '✓ Generata: ' + gen;
+                    return;
+                }
+            }
+            genLabel.textContent = 'Nuk u gjet gjenerata për këtë vit.';
+        }
+    }
+
+    const fileInput        = document.getElementById('photos_input');
+    const previewContainer = document.getElementById('photo-preview');
+    const countMsg         = document.getElementById('photo-count-msg');
+    const photosLabel      = document.getElementById('photos_label');
+    const carForm          = document.getElementById('carForm');
+    const MAX_PHOTOS       = 6;
+    let persistentFiles    = [];
+
+    function refreshCountMsg() {
+        if (persistentFiles.length >= MAX_PHOTOS) {
+            countMsg.textContent = 'Keni arritur limitin e 6 fotove.';
+            countMsg.style.display = 'block';
+            photosLabel.style.opacity = '0.4';
+            photosLabel.style.pointerEvents = 'none';
+            fileInput.disabled = true;
+        } else {
+            countMsg.style.display = 'none';
+            photosLabel.style.opacity = '1';
+            photosLabel.style.pointerEvents = 'auto';
+            fileInput.disabled = false;
+        }
+    }
+
+    fileInput.addEventListener('change', function () {
+        Array.from(fileInput.files).forEach(file => {
+            if (persistentFiles.length >= MAX_PHOTOS) return;
+            if (persistentFiles.some(f => f.name === file.name && f.size === file.size)) return;
+            persistentFiles.push(file);
+            const reader = new FileReader();
+            reader.onload = e => {
+                const div = document.createElement('div');
+                div.style = 'position:relative; width:80px; height:60px;';
+                const img = document.createElement('img');
+                img.src   = e.target.result;
+                img.style = 'width:100%; height:100%; object-fit:cover; border-radius:6px; border:1px solid #ddd;';
+                const removeBtn = document.createElement('span');
+                removeBtn.innerHTML = '&times;';
+                removeBtn.style = 'position:absolute; top:-5px; right:-5px; background:red; color:white; border-radius:50%; width:18px; height:18px; font-size:12px; cursor:pointer; display:flex; align-items:center; justify-content:center;';
+                removeBtn.onclick = () => {
+                    persistentFiles = persistentFiles.filter(f => f !== file);
+                    div.remove();
+                    refreshCountMsg();
+                };
+                div.appendChild(img); div.appendChild(removeBtn);
+                previewContainer.appendChild(div);
+                refreshCountMsg();
+            };
+            reader.readAsDataURL(file);
+        });
+        fileInput.value = '';
+        refreshCountMsg();
+    });
+
+    carForm.onsubmit = function (e) {
+        if (persistentFiles.length === 0) {
+            alert('Ju lutem shtoni të paktën një foto.');
+            return false;
+        }
+        const dataTransfer = new DataTransfer();
+        persistentFiles.forEach(file => dataTransfer.items.add(file));
+        const finalInput = document.createElement('input');
+        finalInput.type = 'file'; finalInput.name = 'photos'; finalInput.multiple = true;
+        finalInput.files = dataTransfer.files; finalInput.style.display = 'none';
+        carForm.appendChild(finalInput);
+        return true;
+    };
+</script>
+{% endblock %}

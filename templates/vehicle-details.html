@@ -1,0 +1,317 @@
+{% extends "base.html" %}
+{% block title %}{{ car.marka }} {{ car.modeli }}{% if car.viti %} {{ car.viti }}{% endif %}{% if car.location %} — {{ car.location }}{% endif %} | Kerko Auto{% endblock %}
+{% block meta_description %}{{ car.marka }} {{ car.modeli }}{% if car.viti %} {{ car.viti }}{% endif %} për shitje{% if car.location %} — {{ car.location }}{% endif %}. Çmimi: {{ "{:,.0f}".format(car.cmimi) }} {{ car.currency }}{% if car.karburant %}, {{ car.karburant }}{% endif %}{% if car.kambio %}, {{ car.kambio }}{% endif %}.{% endblock %}
+{% block og_type %}product{% endblock %}
+{% block og_title %}{{ car.marka }} {{ car.modeli }}{% if car.viti %} {{ car.viti }}{% endif %} — {{ "{:,.0f}".format(car.cmimi) }} {{ car.currency }} | Kerko Auto{% endblock %}
+{% block og_description %}{{ car.marka }} {{ car.modeli }}{% if car.viti %} {{ car.viti }}{% endif %} për shitje{% if car.location %} në {{ car.location }}{% endif %}. Çmimi: {{ "{:,.0f}".format(car.cmimi) }} {{ car.currency }}.{% endblock %}
+{% block og_image %}{% if images %}{{ request.host_url }}static/images/uploads/{{ images[0].filename }}{% else %}{{ request.host_url }}static/images/og-default.jpg{% endif %}{% endblock %}
+{% block twitter_title %}{{ car.marka }} {{ car.modeli }}{% if car.viti %} {{ car.viti }}{% endif %} — {{ "{:,.0f}".format(car.cmimi) }} {{ car.currency }} | Kerko Auto{% endblock %}
+{% block twitter_image %}{% if images %}{{ request.host_url }}static/images/uploads/{{ images[0].filename }}{% else %}{{ request.host_url }}static/images/og-default.jpg{% endif %}{% endblock %}
+{% block content %}
+<div class="container" style="padding-top:40px;">
+
+    <a href="{{ url_for('vehicles') }}" style="color:var(--primary-green);text-decoration:none;font-weight:600;display:inline-block;margin-bottom:20px;">
+        <i class="fa-solid fa-arrow-left"></i> Kthehu te Makinat
+    </a>
+
+    <div style="display:grid;grid-template-columns:2fr 1fr;gap:30px;">
+
+        <!-- Left: Images + Details -->
+        <div>
+            <!-- Main image with prev/next arrows -->
+            {% if images %}
+            <div style="position:relative;" id="main-img-wrap">
+                <img id="main-img"
+                     src="{{ url_for('static', filename='images/uploads/' + images[0].filename) }}"
+                     alt="{{ car.marka }} {{ car.modeli }}{% if car.viti %} {{ car.viti }}{% endif %} — foto kryesore"
+                     style="width:100%;height:450px;object-fit:cover;border-radius:12px;margin-bottom:10px;cursor:zoom-in;"
+                     onclick="openLightbox(currentIndex)">
+
+                <!-- Prev / Next on main image -->
+                {% if images|length > 1 %}
+                <button onclick="shiftMain(-1)" class="img-nav-btn img-nav-left"><i class="fa-solid fa-chevron-left"></i></button>
+                <button onclick="shiftMain(1)"  class="img-nav-btn img-nav-right"><i class="fa-solid fa-chevron-right"></i></button>
+                {% endif %}
+            </div>
+
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                {% for img in images %}
+                <img src="{{ url_for('static', filename='images/uploads/' + img.filename) }}"
+                     onclick="setMain({{ loop.index0 }})"
+                     class="thumb-img"
+                     alt="{{ car.marka }} {{ car.modeli }} — foto {{ loop.index }}"
+                     loading="lazy"
+                     style="width:80px;height:60px;object-fit:cover;border-radius:6px;cursor:pointer;border:2px solid transparent;transition:border-color 0.2s;"
+                     onmouseover="this.style.borderColor='var(--primary-green)'"
+                     onmouseout="this.style.borderColor=(currentIndex==={{ loop.index0 }}?'var(--primary-green)':'transparent')">
+                {% endfor %}
+            </div>
+            {% else %}
+            <img src="{{ url_for('static', filename='images/car-placeholder.jpg') }}"
+                 style="width:100%;height:450px;object-fit:cover;border-radius:12px;">
+            {% endif %}
+
+            <div style="background:white;padding:30px;border-radius:12px;margin-top:20px;">
+                <h2 style="margin-bottom:5px;">
+                    <a href="{{ url_for('vehicles', marka=car.marka) }}" style="color:inherit; text-decoration:none;">{{ car.marka }}</a>
+                    {{ car.modeli }}
+                </h2>
+                <p style="color:gray;font-size:14px;margin-bottom:20px;">
+                    <i class="fa-solid fa-location-dot"></i>
+                    <a href="{{ url_for('vehicles', location=car.location) }}" style="color:gray; text-decoration:none;">{{ car.location or 'Shqipëri' }}</a>
+                </p>
+
+                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin-bottom:20px;">
+                    {% if car.viti %}
+                    <div style="background:#f9f9f9;padding:15px;border-radius:8px;text-align:center;">
+                        <i class="fa-regular fa-calendar" style="color:var(--primary-green);font-size:20px;"></i>
+                        <p style="font-size:12px;color:gray;margin-top:5px;">Viti</p>
+                        <p style="font-weight:600;">{{ car.viti }}</p>
+                    </div>
+                    {% endif %}
+                    {% if car.karburant %}
+                    <div style="background:#f9f9f9;padding:15px;border-radius:8px;text-align:center;">
+                        <i class="fa-solid fa-gas-pump" style="color:var(--primary-green);font-size:20px;"></i>
+                        <p style="font-size:12px;color:gray;margin-top:5px;">Karburanti</p>
+                        <p style="font-weight:600;">{{ car.karburant }}</p>
+                    </div>
+                    {% endif %}
+                    {% if car.km %}
+                    <div style="background:#f9f9f9;padding:15px;border-radius:8px;text-align:center;">
+                        <i class="fa-solid fa-road" style="color:var(--primary-green);font-size:20px;"></i>
+                        <p style="font-size:12px;color:gray;margin-top:5px;">Kilometra</p>
+                        <p style="font-weight:600;">{{ "{:,.0f}".format(car.km) }} km</p>
+                    </div>
+                    {% endif %}
+                    {% if car.kambio %}
+                    <div style="background:#f9f9f9;padding:15px;border-radius:8px;text-align:center;">
+                        <i class="fa-solid fa-gears" style="color:var(--primary-green);font-size:20px;"></i>
+                        <p style="font-size:12px;color:gray;margin-top:5px;">Kambio</p>
+                        <p style="font-weight:600;">{{ car.kambio }}</p>
+                    </div>
+                    {% endif %}
+                    {% if car.forma %}
+                    <div style="background:#f9f9f9;padding:15px;border-radius:8px;text-align:center;">
+                        <i class="fa-solid fa-car-side" style="color:var(--primary-green);font-size:20px;"></i>
+                        <p style="font-size:12px;color:gray;margin-top:5px;">Forma</p>
+                        <p style="font-weight:600;">{{ car.forma }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+                {% if car.description %}
+                <h4 style="margin-bottom:10px;">Përshkrimi</h4>
+                <p style="color:#555;line-height:1.7;white-space:pre-line;">{{ car.description }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Right: Price + Seller -->
+        <div>
+            <div style="background:white;padding:25px;border-radius:12px;box-shadow:0 4px 10px rgba(0,0,0,0.05);position:sticky;top:20px;">
+                <p class="car-price" style="font-size:2rem;">{{ "{:,.0f}".format(car.cmimi) }} {{ car.currency }}</p>
+
+                <hr style="margin:15px 0;border:none;border-top:1px solid #eee;">
+
+                <h4 style="margin-bottom:10px;">Informacioni i Kontaktit</h4>
+
+                <p style="font-weight:600; font-size: 16px;">
+                    <i class="fa-solid fa-user" style="color:var(--primary-green); width: 20px;"></i>
+                    {{ car.contact_name if car.contact_name else (car.first_name + ' ' + car.last_name) }}
+                </p>
+
+                {% if car.phone %}
+                <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 10px;">
+                    <a href="tel:{{ car.phone }}" class="btn-primary" style="text-align:center; display: block; background-color: #25D366; border: none;">
+                        <i class="fa-solid fa-phone"></i> {{ car.phone }}
+                    </a>
+                    <a href="https://wa.me/{{ car.phone|replace(' ', '')|replace('+', '') }}" target="_blank"
+                       style="text-align:center; display: block; padding: 10px; border: 1px solid #25D366; color: #25D366; text-decoration: none; border-radius: 20px; font-weight: 600; font-size: 14px;">
+                        <i class="fa-brands fa-whatsapp"></i> Shkruaj në WhatsApp
+                    </a>
+                </div>
+                {% else %}
+                <p style="font-size: 13px; color: gray; margin-top: 10px;">Shitësi nuk ka lënë numër kontakti.</p>
+                {% endif %}
+
+                <hr style="margin:15px 0;border:none;border-top:1px solid #eee;">
+
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <p style="font-size:12px;color:gray;">Postuar më: {{ car.created_at[:10] }}</p>
+                    {% if session.is_admin %}
+                    <p style="font-size:12px;color:gray;"><i class="fa-solid fa-eye"></i> Shfaqje: {{ car.views if car.views else 0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Similar Cars -->
+    {% if similar %}
+    <h2 style="font-size:22px;margin:50px 0 20px;">Makina të Ngjashme</h2>
+    <div class="grid-5">
+        {% for s in similar %}
+        <div class="car-card" onclick="window.location.href='{{ url_for('vehicle_details', car_id=s.id) }}'">
+            {% if s.main_image %}
+                <img src="{{ url_for('static', filename='images/uploads/' + s.main_image) }}" alt="{{ s.marka }} {{ s.modeli }}" loading="lazy">
+            {% else %}
+                <img src="{{ url_for('static', filename='images/car-placeholder.jpg') }}" alt="Car">
+            {% endif %}
+            <div class="car-info">
+                <h4>{{ s.marka }} {{ s.modeli }}</h4>
+                <span class="car-price">{{ "{:,.0f}".format(s.cmimi) }} {{ s.currency }}</span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+</div>
+
+<!-- ── Lightbox ── -->
+<div id="lightbox" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:5000;align-items:center;justify-content:center;">
+    <button onclick="closeLightbox()" style="position:absolute;top:20px;right:28px;background:none;border:none;color:white;font-size:32px;cursor:pointer;">&times;</button>
+    <button onclick="lightboxShift(-1)" class="img-nav-btn img-nav-left" style="left:24px;"><i class="fa-solid fa-chevron-left"></i></button>
+    <img id="lightbox-img" src="" style="max-width:90vw;max-height:88vh;object-fit:contain;border-radius:8px;">
+    <button onclick="lightboxShift(1)"  class="img-nav-btn img-nav-right" style="right:24px;"><i class="fa-solid fa-chevron-right"></i></button>
+</div>
+{% endblock %}
+
+{% block structured_data %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org/",
+  "@type": "Car",
+  "name": "{{ car.marka }} {{ car.modeli }}{% if car.viti %} {{ car.viti }}{% endif %}",
+  "brand": { "@type": "Brand", "name": "{{ car.marka }}" },
+  "model": "{{ car.modeli }}"
+  {% if car.viti %},"modelDate": "{{ car.viti }}"{% endif %}
+  {% if car.km %},"mileageFromOdometer": { "@type": "QuantitativeValue", "value": {{ car.km }}, "unitCode": "KMT" }{% endif %}
+  {% if car.karburant %},"fuelType": "{{ car.karburant }}"{% endif %}
+  {% if car.kambio %},"vehicleTransmission": "{{ car.kambio }}"{% endif %}
+  {% if car.forma %},"bodyType": "{{ car.forma }}"{% endif %}
+  {% if car.location %},"vehicleConfiguration": "{{ car.location }}"{% endif %}
+  {% if images %},"image": "{{ request.host_url }}static/images/uploads/{{ images[0].filename }}"{% endif %}
+  ,"offers": {
+    "@type": "Offer",
+    "price": "{{ car.cmimi }}",
+    "priceCurrency": "{{ car.currency }}",
+    "availability": "https://schema.org/InStock",
+    "url": "{{ request.url }}"
+  }
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Kryefaqja",
+      "item": "{{ request.host_url }}"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Makina",
+      "item": "{{ request.host_url }}vehicles"
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": "{{ car.marka }}",
+      "item": "{{ request.host_url }}vehicles?marka={{ car.marka }}"
+    },
+    {
+      "@type": "ListItem",
+      "position": 4,
+      "name": "{{ car.marka }} {{ car.modeli }}{% if car.viti %} {{ car.viti }}{% endif %}",
+      "item": "{{ request.url }}"
+    }
+  ]
+}
+</script>
+{% endblock %}
+
+{% block scripts %}
+<style>
+.img-nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0,0,0,0.55);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 42px;
+    height: 42px;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+    z-index: 10;
+}
+.img-nav-btn:hover { background: var(--primary-green); color: #000; }
+.img-nav-left  { left: 12px; }
+.img-nav-right { right: 12px; }
+</style>
+<script>
+    const imageUrls = [
+        {% for img in images %}
+        "{{ url_for('static', filename='images/uploads/' + img.filename) }}"{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ];
+    let currentIndex = 0;
+
+    function setMain(idx) {
+        currentIndex = idx;
+        document.getElementById('main-img').src = imageUrls[idx];
+        document.querySelectorAll('.thumb-img').forEach((t, i) => {
+            t.style.borderColor = i === idx ? 'var(--primary-green)' : 'transparent';
+        });
+    }
+
+    function shiftMain(dir) {
+        if (!imageUrls.length) return;
+        setMain((currentIndex + dir + imageUrls.length) % imageUrls.length);
+    }
+
+    function openLightbox(idx) {
+        currentIndex = idx;
+        document.getElementById('lightbox-img').src = imageUrls[idx];
+        const lb = document.getElementById('lightbox');
+        lb.style.display = 'flex';
+    }
+
+    function closeLightbox() {
+        document.getElementById('lightbox').style.display = 'none';
+    }
+
+    function lightboxShift(dir) {
+        if (!imageUrls.length) return;
+        currentIndex = (currentIndex + dir + imageUrls.length) % imageUrls.length;
+        document.getElementById('lightbox-img').src = imageUrls[currentIndex];
+    }
+
+    // Close lightbox on background click
+    document.getElementById('lightbox').addEventListener('click', function(e) {
+        if (e.target === this) closeLightbox();
+    });
+
+    // Keyboard navigation
+    document.addEventListener('keydown', function(e) {
+        const lb = document.getElementById('lightbox');
+        if (lb.style.display === 'flex') {
+            if (e.key === 'ArrowLeft')  lightboxShift(-1);
+            if (e.key === 'ArrowRight') lightboxShift(1);
+            if (e.key === 'Escape')     closeLightbox();
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+{% block title %}{% if marka %}{{ marka }}{% if modeli %} {{ modeli }}{% endif %} për shitje{% else %}Makina për Shitje në Shqipëri{% endif %} | Kerko Auto{% endblock %}
+{% block meta_description %}{% if marka %}Gjej {{ marka }}{% if modeli %} {{ modeli }}{% endif %} për shitje në Shqipëri. {{ total }} makina të disponueshme në Kerko Auto.{% else %}Kërko midis mijëra makinave për shitje në Shqipëri. Filtro sipas markës, modelit, çmimit dhe qytetit.{% endif %}{% endblock %}
+{% block canonical_url %}
+<link rel="canonical" href="{{ request.host_url }}vehicles{% if marka %}?marka={{ marka }}{% if modeli %}&modeli={{ modeli }}{% endif %}{% endif %}">
+{% if page is defined and total_pages is defined %}
+{% if page > 1 %}<link rel="prev" href="{{ request.host_url }}vehicles?page={{ page - 1 }}{% if marka %}&marka={{ marka }}{% endif %}">{% endif %}
+{% if page < total_pages %}<link rel="next" href="{{ request.host_url }}vehicles?page={{ page + 1 }}{% if marka %}&marka={{ marka }}{% endif %}">{% endif %}
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="vehicles-page">
+
+    <!-- ===== FILTER PANEL ===== -->
+    <div class="vehicles-filter-wrap">
+        <form action="{{ url_for('vehicles') }}" method="GET" id="filterForm" class="vehicles-filter-form">
+
+            <!-- Keyword search -->
+            <div class="filter-search-bar">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" name="search" value="{{ search or '' }}"
+                       placeholder="Kërko me fjalë kyçe (psh: S-Line, Targa, Full Option)...">
+            </div>
+
+            <!-- Primary filters grid -->
+            <div class="filter-grid-primary">
+                <div class="vf-box">
+                    <label>Marka</label>
+                    <select name="marka" id="filterMarka" onchange="populateModels('filterMarka', 'filterModeli')">
+                        <option value="">Çdo Markë</option>
+                    </select>
+                </div>
+                <div class="vf-box">
+                    <label>Modeli</label>
+                    <select name="modeli" id="filterModeli" onchange="updateYearGenerations()">
+                        <option value="">Çdo Model</option>
+                    </select>
+                </div>
+                <div class="vf-box">
+                    <label>Viti</label>
+                    <select name="year_range" id="filterYear">
+                        <option value="">Gjithë vitet</option>
+                    </select>
+                </div>
+                <div class="vf-box">
+                    <label>Kambio</label>
+                    <select name="kambio">
+                        <option value="">Gjithë llojet</option>
+                        <option value="Manuale" {% if kambio == 'Manuale' %}selected{% endif %}>Manuale</option>
+                        <option value="Automatike" {% if kambio == 'Automatike' %}selected{% endif %}>Automatike</option>
+                    </select>
+                </div>
+                <div class="vf-box">
+                    <label>Karburanti</label>
+                    <select name="karburanti">
+                        <option value="">Gjithë llojet</option>
+                        <option value="Naftë" {% if karburanti == 'Naftë' %}selected{% endif %}>Naftë</option>
+                        <option value="Benzinë" {% if karburanti == 'Benzinë' %}selected{% endif %}>Benzinë</option>
+                        <option value="Benzinë + Gaz" {% if karburanti == 'Benzinë + Gaz' %}selected{% endif %}>Benzinë + Gaz</option>
+                        <option value="Elektrike" {% if karburanti == 'Elektrike' %}selected{% endif %}>Elektrike</option>
+                    </select>
+                </div>
+                <div class="vf-box">
+                    <label>Çmimi (€)</label>
+                    <div class="price-range-wrap">
+                        <input type="number" name="price_from" value="{{ price_from }}" placeholder="Nga">
+                        <span>—</span>
+                        <input type="number" name="price_to" value="{{ price_to }}" placeholder="Deri">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Advanced filters (hidden) -->
+            <div id="advancedFilters" style="max-height:0; overflow:hidden; transition:all 0.4s ease; opacity:0;">
+                <div class="filter-grid-advanced">
+                    <div class="vf-box">
+                        <label>Qyteti</label>
+                        <select name="location">
+                            <option value="">Gjithë Shqipëria</option>
+                            {% for loc in ['Tirane', 'Fier', 'Durres', 'Elbasan', 'Korce', 'Shkoder', 'Vlore', 'Berat', 'Lezhe', 'Diber', 'Kukes', 'Gjirokaster', 'Lushnje', 'Pogradec', 'Kavaje', 'Sarande'] %}
+                            <option value="{{ loc }}" {% if location == loc %}selected{% endif %}>{{ loc }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="vf-box">
+                        <label>Kilometrat</label>
+                        <select name="km_range">
+                            <option value="">Çdo kilometrazh</option>
+                            <option value="0-10000" {% if km_range == '0-10000' %}selected{% endif %}>0 – 10,000 km</option>
+                            <option value="10001-50000" {% if km_range == '10001-50000' %}selected{% endif %}>10,001 – 50,000 km</option>
+                            <option value="50001-100000" {% if km_range == '50001-100000' %}selected{% endif %}>50,001 – 100,000 km</option>
+                            <option value="100001-150000" {% if km_range == '100001-150000' %}selected{% endif %}>100,001 – 150,000 km</option>
+                            <option value="150001-250000" {% if km_range == '150001-250000' %}selected{% endif %}>150,001 – 250,000 km</option>
+                            <option value="250000+" {% if km_range == '250000+' %}selected{% endif %}>250,000+ km</option>
+                        </select>
+                    </div>
+                    <div class="vf-box">
+                        <label>Forma</label>
+                        <select name="forma">
+                            <option value="">Të gjitha</option>
+                            <option value="Hatchback" {% if forma == 'Hatchback' %}selected{% endif %}>Hatchback</option>
+                            <option value="Sedan" {% if forma == 'Sedan' %}selected{% endif %}>Sedan</option>
+                            <option value="Wagon" {% if forma == 'Wagon' %}selected{% endif %}>Wagon</option>
+                            <option value="SUV" {% if forma == 'SUV' %}selected{% endif %}>SUV</option>
+                            <option value="MPV" {% if forma == 'MPV' %}selected{% endif %}>MPV</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form actions -->
+            <div class="filter-actions">
+                <button type="button" onclick="toggleAdvanced()" id="btnMore" class="btn-more-filters">
+                    <i class="fa-solid fa-sliders"></i> <span id="btnMoreLabel">Më shumë filtra</span>
+                </button>
+                <button type="submit" class="btn-filter-search">
+                    <i class="fa-solid fa-magnifying-glass"></i> Kërko
+                </button>
+                <a href="{{ url_for('vehicles') }}" class="btn-filter-reset">
+                    <i class="fa-solid fa-rotate-right"></i> Rifresko
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- ===== RESULTS ===== -->
+    <div class="vehicles-results-wrap">
+        <h1 class="results-count"><span>{{ total }}</span> {% if marka %}{{ marka }}{% if modeli %} {{ modeli }}{% endif %}{% else %}Makina{% endif %} të gjetura</h1>
+
+        <div class="vehicles-grid">
+            {% for car in cars %}
+            <a href="{{ url_for('vehicle_details', car_id=car.id) }}" class="car-listing-card">
+                <div class="car-listing-image-wrap">
+                    {% if car.main_image %}
+                        <img src="{{ url_for('static', filename='images/uploads/' + car.main_image) }}"
+                            alt="{{ car.marka }} {{ car.modeli }}{% if car.viti %} {{ car.viti }}{% endif %} për shitje{% if car.location %} — {{ car.location }}{% endif %}"
+                            loading="lazy" width="400" height="280">
+                    {% else %}
+                        <div class="car-img-placeholder"><i class="fa-solid fa-car"></i></div>
+                    {% endif %}
+                </div>
+                <div class="car-listing-body">
+                    <h4 class="car-listing-title">{{ car.marka }} {{ car.modeli }}</h4>
+                    <div class="car-listing-location">
+                        <i class="fa-solid fa-location-dot"></i>
+                        {{ car.location if car.location else 'Shqipëri' }}
+                    </div>
+                    <div class="car-listing-divider"></div>
+                    <div class="car-listing-specs">
+                        <div class="spec-item">
+                            <i class="fa-regular fa-calendar"></i>
+                            <div>
+                                <span class="spec-label">Viti</span>
+                                <span class="spec-value">{{ car.viti if car.viti else '—' }}</span>
+                            </div>
+                        </div>
+                        <div class="spec-item">
+                            <i class="fa-solid fa-gas-pump"></i>
+                            <div>
+                                <span class="spec-label">Karburanti</span>
+                                <span class="spec-value">{{ car.karburant if car.karburant else '—' }}</span>
+                            </div>
+                        </div>
+                        <div class="spec-item">
+                            <i class="fa-solid fa-gears"></i>
+                            <div>
+                                <span class="spec-label">Kambio</span>
+                                <span class="spec-value">{{ car.kambio if car.kambio else '—' }}</span>
+                            </div>
+                        </div>
+                        <div class="spec-item">
+                            <i class="fa-solid fa-road"></i>
+                            <div>
+                                <span class="spec-label">Km</span>
+                                <span class="spec-value">{{ "{:,.0f}".format(car.km) if car.km else '—' }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="car-listing-footer">
+                        <span class="car-listing-price">€{{ "{:,.0f}".format(car.cmimi) }}</span>
+                        <span class="btn-bli-tani">Bli tani</span>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+
+            {% if cars|length == 0 %}
+            <div class="no-results">
+                <i class="fa-solid fa-car-burst"></i>
+                <h3>Nuk u gjetën makina</h3>
+                <p>Provo të ndryshosh filtrat e kërkimit.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Page-level data only — Jinja values passed to JS, all logic lives in main.js
+    window.vehiclesPageData = {
+        marka: "{{ marka | default('') }}",
+        modeli: "{{ modeli | default('') }}",
+        year_range: "{{ year_range | default('') }}"
+    };
+</script>
+{% endblock %}
