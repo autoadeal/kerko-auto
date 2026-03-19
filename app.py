@@ -12,7 +12,7 @@ from datetime import timedelta
 from whitenoise import WhiteNoise
 
 app = Flask(__name__)
-app.wsgi_app = WhiteNoise(app.wsgi_app, root='static/', prefix='static/')
+app.wsgi_app = WhiteNoise(app.wsgi_app, root="static/")
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-change-in-production")
 
 UPLOAD_FOLDER = os.environ.get("UPLOAD_FOLDER", os.path.join("static", "images", "uploads"))
