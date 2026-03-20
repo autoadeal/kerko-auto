@@ -666,3 +666,47 @@ document.addEventListener("DOMContentLoaded", function () {
     // Populate year/generation options, then restore selected value
     updateYearGenerations(data.year_range);
 });
+
+// About us section on home.html
+document.addEventListener('DOMContentLoaded', () => {
+    // 1. Scroll-in Animation Observer (Desktop & Mobile)
+    const section = document.querySelector('.why-us-section');
+    const entryObserver = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting) {
+            section.classList.add('is-visible');
+            entryObserver.disconnect(); // Unobserve once animation triggers
+        }
+    }, { threshold: 0.2 }); // Triggers when 20% of the section is visible
+    
+    if (section) entryObserver.observe(section);
+
+    // 2. Mobile Swipe Carousel Observer
+    if (window.innerWidth <= 768) {
+        const grid = document.querySelector('.why-us-grid');
+        const cards = document.querySelectorAll('.why-card');
+        
+        const carouselObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active-slide');
+                } else {
+                    entry.target.classList.remove('active-slide');
+                }
+            });
+        }, {
+            root: grid,
+            threshold: 0.6 // Triggers when 60% of a specific card is in the center
+        });
+
+        cards.forEach(card => carouselObserver.observe(card));
+
+        // Optional: Automatically scroll to the middle (black) card on load
+        setTimeout(() => {
+            const middleCard = cards[1];
+            grid.scrollTo({
+                left: middleCard.offsetLeft - (grid.clientWidth / 2) + (middleCard.clientWidth / 2),
+                behavior: 'smooth'
+            });
+        }, 800); // Wait for entry animations to finish before centering
+    }
+});

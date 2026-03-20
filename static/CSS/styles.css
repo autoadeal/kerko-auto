@@ -267,28 +267,85 @@ footer { background-color: #292828; color: white; padding: 35px 0 20px; margin-t
   .home-blog-header { margin-bottom: 15px; }
 }
 
-.why-us-section { background: #fff; padding: 30px 5% 45px; }
+.why-us-section { background: #fff; padding: 60px 5% 75px; overflow: hidden; }
 .why-us-inner { max-width: 1200px; margin: 0 auto; }
 .why-us-header { text-align: center; margin-bottom: 50px; }
-.why-us-header h3 { font-size: 36px; font-weight: 900; color: var(--text-dark); margin-bottom: 10px; }
+.why-us-header h2 { font-size: 36px; font-weight: 900; color: var(--text-dark, #111); margin-bottom: 10px; }
 .why-us-sub { font-size: 16px; color: #999; font-weight: 500; }
 .why-us-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
-.why-card { position: relative; background: #f8f8f8; border-radius: 24px; padding: 36px 32px 40px; border: 1.5px solid #efefef; overflow: hidden; transition: transform 0.3s, box-shadow 0.3s; }
-.why-card:hover { transform: translateY(-6px); box-shadow: 0 20px 40px rgba(0,0,0,0.07); }
+.why-card { position: relative; background: #f8f8f8; border-radius: 24px; padding: 36px 32px 40px; border: 1.5px solid #efefef; overflow: hidden; transition: transform 0.4s ease, box-shadow 0.3s; }
 .why-card.featured { background: #111; border-color: #222; }
 .why-card.featured h4, .why-card.featured p { color: #fff; }
-.why-card.featured .why-icon-wrap { background: var(--primary-green); color: #000; }
-.why-card.featured .why-card-accent { background: var(--primary-green); opacity: 0.15; }
-.why-icon-wrap { width: 56px; height: 56px; background: var(--primary-green); border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: #000; margin-bottom: 24px; }
-.why-card:not(.featured) .why-icon-wrap { background: rgba(30,206,61,0.12); color: var(--primary-green); }
-.why-card h4 { font-size: 18px; font-weight: 900; color: var(--text-dark); margin-bottom: 12px; }
+.why-card.featured .why-icon-wrap { background: var(--primary-green, #1ece3d); color: #000; }
+.why-card.featured .why-card-accent { background: var(--primary-green, #1ece3d); opacity: 0.15; }
+.why-icon-wrap { width: 56px; height: 56px; background: var(--primary-green, #1ece3d); border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: #000; margin-bottom: 24px; }
+.why-card:not(.featured) .why-icon-wrap { background: rgba(30,206,61,0.12); color: var(--primary-green, #1ece3d); }
+.why-card h4 { font-size: 18px; font-weight: 900; color: var(--text-dark, #111); margin-bottom: 12px; }
 .why-card p { font-size: 14px; color: #777; line-height: 1.7; }
 .why-card-accent { position: absolute; bottom: -30px; right: -30px; width: 100px; height: 100px; background: rgba(30,206,61,0.08); border-radius: 50%; }
-@media (max-width: 600px) {
-  .why-us-section { margin-bottom: -20px; }
-  .why-us-header { margin-bottom: 020px; margin-top: -5px; }
-  .why-us-header h3 { font-size: 28px;}
-  .why-us-sub { font-size: 14px ;}
+
+/* Desktop hover effect only (prevents conflicts with mobile scaling) */
+@media (min-width: 769px) {
+  .why-card:hover { transform: translateY(-6px); box-shadow: 0 20px 40px rgba(0,0,0,0.07); }
+}
+/* --- ANIMATION STATES (Triggered by JS on scroll) --- */
+/* Initial hidden state */
+.why-us-header, .why-card {
+    opacity: 0;
+    filter: blur(10px);
+    transition: all 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.why-us-header { transform: translateY(30px); }
+/* Desktop specific entry transforms */
+@media (min-width: 769px) {
+    .why-card:nth-child(1) { transform: translateX(-60px); }
+    .why-card:nth-child(2) { transform: translateY(60px); transition-delay: 0.15s; }
+    .why-card:nth-child(3) { transform: translateX(60px); transition-delay: 0.3s; }
+}
+/* Visible state (Class added by JS) */
+.why-us-section.is-visible .why-us-header,
+.why-us-section.is-visible .why-card {
+    opacity: 1;
+    filter: blur(0);
+}
+@media (min-width: 769px) {
+    .why-us-section.is-visible .why-us-header,
+    .why-us-section.is-visible .why-card { transform: translate(0); }
+}
+/* --- MOBILE CAROUSEL STYLES --- */
+@media (max-width: 768px) {
+    .why-us-header h2 { font-size: 28px; }
+    .why-us-sub { font-size: 14px; }
+    
+    .why-us-grid {
+        display: flex;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        padding: 20px 12.5%; /* Allows first and last cards to center perfectly */
+        gap: 15px;
+        scroll-behavior: smooth;
+        -ms-overflow-style: none; /* Hide scrollbar IE/Edge */
+        scrollbar-width: none; /* Hide scrollbar Firefox */
+    }
+    .why-us-grid::-webkit-scrollbar { display: none; /* Hide scrollbar Chrome/Safari */ }
+    
+    .why-card {
+        flex: 0 0 75%; /* Card takes 75% of screen, leaving 12.5% of side cards visible */
+        scroll-snap-align: center;
+        /* Default mobile state is scaled down by 20% (0.8) */
+        transform: scale(0.8) translateY(40px); 
+    }
+
+    /* When scrolled into view on mobile */
+    .why-us-section.is-visible .why-card {
+        transform: scale(0.8) translateY(0);
+    }
+
+    /* When card is focused/centered in the carousel */
+    .why-us-section.is-visible .why-card.active-slide {
+        transform: scale(1) translateY(0);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+    }
 }
 
 
@@ -683,7 +740,6 @@ header.transparent-bg .hamburger span { background: white; }
 .contact-form-input { width: 100%; padding: 12px; border: 1px solid #eee; border-radius: 8px; background: #ffffff; }
 .contact-form-textarea { width: 100%; padding: 12px; border: 1px solid #eee; border-radius: 8px; background: #ffffff; resize: none; }
 .contact-form-submit { padding: 15px; font-size: 16px; border-radius: 10px; }
-
 @media (max-width: 600px) {
   .contact-grid { padding-bottom: 12px !important; } 
 }
