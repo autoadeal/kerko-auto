@@ -669,22 +669,36 @@ document.addEventListener("DOMContentLoaded", function () {
 
 // About us section on home.html
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Scroll-in Animation Observer (Desktop & Mobile)
     const section = document.querySelector('.why-us-section');
+    const grid = document.querySelector('.why-us-grid');
+    const cards = document.querySelectorAll('.why-card');
+
+    // 1. Instantly center the middle card on mobile before anything else happens
+    if (window.innerWidth <= 768 && cards.length >= 3) {
+        const middleCard = cards[1];
+        // Calculate exact center position and apply instantly
+        grid.scrollLeft = middleCard.offsetLeft - (grid.clientWidth / 2) + (middleCard.clientWidth / 2);
+    }
+
+    // 2. Scroll-in Animation Observer
     const entryObserver = new IntersectionObserver((entries) => {
         if (entries[0].isIntersecting) {
             section.classList.add('is-visible');
-            entryObserver.disconnect(); // Unobserve once animation triggers
+            
+            // Wait for the 1.2s entrance animation + 0.2s delay to finish, 
+            // then switch to snappy hover/swipe transitions
+            setTimeout(() => {
+                section.classList.add('animations-done');
+            }, 1400); 
+
+            entryObserver.disconnect(); 
         }
-    }, { threshold: 0.2 }); // Triggers when 20% of the section is visible
+    }, { threshold: 0.2 }); 
     
     if (section) entryObserver.observe(section);
 
-    // 2. Mobile Swipe Carousel Observer
+    // 3. Mobile Swipe Carousel Observer
     if (window.innerWidth <= 768) {
-        const grid = document.querySelector('.why-us-grid');
-        const cards = document.querySelectorAll('.why-card');
-        
         const carouselObserver = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
@@ -695,18 +709,9 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }, {
             root: grid,
-            threshold: 0.6 // Triggers when 60% of a specific card is in the center
+            threshold: 0.6 
         });
 
         cards.forEach(card => carouselObserver.observe(card));
-
-        // Optional: Automatically scroll to the middle (black) card on load
-        setTimeout(() => {
-            const middleCard = cards[1];
-            grid.scrollTo({
-                left: middleCard.offsetLeft - (grid.clientWidth / 2) + (middleCard.clientWidth / 2),
-                behavior: 'smooth'
-            });
-        }, 800); // Wait for entry animations to finish before centering
     }
 });
