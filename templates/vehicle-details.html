@@ -36,7 +36,7 @@
 
             <div style="display:flex;gap:10px;flex-wrap:wrap;">
                 {% for img in images %}
-                <img src="{{ url_for('uploaded_file', filename=s.main_image) }}"
+                <img src="{{ url_for('uploaded_file', filename=img.filename) }}"
                      onclick="setMain({{ loop.index0 }})"
                      class="thumb-img"
                      alt="{{ car.marka }} {{ car.modeli }} — foto {{ loop.index }}"

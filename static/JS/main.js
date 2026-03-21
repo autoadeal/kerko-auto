@@ -48,14 +48,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
 // Brands and models
 const carData = {
-    "Volkswagen": ["Polo", "Golf", "Jetta", "Passat", "Arteon", "Caddy", "Tiguan", "Touareg", "Touran", "Sharan", "ID.3", "ID.4", "ID.5", "ID.7", "T-Cross", "T-Roc", "Bora", "Taigo", "Tayron", "Multivan", "California"],
+    "Volkswagen": ["Polo", "Golf", "Jetta", "Passat", "Arteon", "Caddy", "Tiguan", "Touareg", "Touran", "Sharan", "ID.3", "ID.4", "ID.5", "ID.7", "T-Cross", "T-Roc", "Bora", "Taigo", "Tayron", "Multivan", "California", "Crafter", "Transporter", "Amarok", "ID. Buzz" ],
     "BMW": ["Seria 1", "Seria 2", "Seria 3", "Seria 4", "Seria 5", "Seria 6", "Seria 7", "Seria 8", "X1", "X2", "X3", "X4", "X5", "X6", "X7", "i3", "i4", "i5", "i7",  "iX1", "iX2", "iX3", "iX", "Z1", "Z3", "Z4", "Z8"],
-    "Mercedes-Benz": ["A-Class", "B-Class", "C-Class", "E-Class", "S-Class", "G-Class", "V-Class", "CLA", "CLE", "CLS", "GLA", "GLB", "GLC", "GLE", "GLS", "GT", "SL", "EQA", "EQB", "EQE", "EQS", "EQA", "EQT", "EQV" ],
+    "Mercedes-Benz": ["A-Class", "B-Class", "C-Class", "E-Class", "S-Class", "G-Class", "V-Class", "CLA", "CLE", "CLS", "GLA", "GLB", "GLC", "GLE", "GLS", "GT", "SL", "EQA", "EQB", "EQE", "EQS", "EQA", "EQT", "EQV", "Sprinter", "Vito", "Citan" ],
     "Audi": ["A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7", "Q8", "e-tron", "TT", "R8"],
-    "Ford": ["Fiesta", "Focus", "Puma", "Kuga", "Mondeo", "Explorer", "Mustang Mach-E", "Mustang", "Ranger", "Transit", "S-Max", "Galaxy", "EcoSport", "Edge"],
+    "Ford": ["Fiesta", "Focus", "Puma", "Kuga", "Mondeo", "Explorer", "Mustang", "Ranger", "Transit", "S-Max", "Galaxy", "EcoSport", "Edge", "Bronco", "Expedition", "Ranger", "Courier", "Connect", "Custom", "Transit"],
     "Toyota": ["Yaris", "Corolla", "C-HR", "RAV4", "Aygo", "Prius", "Camry", "Land Cruiser", "Hilux", "bZ4X", "Supra", "Proace"],
     "Skoda": ["Fabia", "Octavia", "Superb", "Kamiq", "Karoq", "Kodiaq", "Enyaq", "Elroq", "Scala", "Citigo", "Yeti", "Rapid"],
-    "Renault": ["Clio", "Captur", "Megane", "Austral", "Rafale", "Scenic", "Espace", "Twingo", "Zoe", "Kadjat", "Arkana", "Symbioz", "Kangoo", "Talisman"],
+    "Renault": ["Clio", "Captur", "Megane", "Austral", "Rafale", "Scenic", "Espace", "Twingo", "Zoe", "Kadjat", "Arkana", "Symbioz", "Kangoo", "Talisman", "Trafic"],
     "Fiat": ["500", "500e", "Panda", "Grande Panda", "Tipo", "600", "500L", "500X", "Punto", "Bravo", "Ducato", "Doblo"],
     "Peugeot": ["108", "207", "208", "2008", "307" ,"308", "3008", "408", "508", "5008", "RCZ", "Partner", "Rifter", "Expert"],
     "BYD": ["Seagull", "Dolphin", "Atto 3", "Seal", "Seal U", "Han", "Tang", "Yuan Plus", "E2"],
@@ -76,6 +76,7 @@ const carData = {
     "Alfa Romeo": ["Giulietta", "Giulia", "Stelvio", "Tonale", "Junior", "4C", "8C"],
     "Tesla": ["Model 3", "Model Y", "Model S", "Model X", "Cybertruck"],
     "Honda": ["Civic", "Jazz", "HR-V", "CR-V", "ZR-V", "e", "Accord", "NSX"],
+    "Smart": ["ForTwo", "ForFour", "Roadster"],
     "Mitsubishi": ["Space Star", "ASX", "Eclipse Cross", "Outlander", "L200", "Colt", "Pajero"]
 };
 
@@ -138,11 +139,15 @@ const generationData = {
         "Tayron": ['Gen 1 2018–2024', 'Gen 2 2024–2026'],
         "Multivan": ['T5 2003–2015', 'T6 2015–2021', 'T7 2021–2026'],
         "California": ['T5 2003–2015', 'T6 2015–2024', 'T7 2024–2026'],
+        "Crafter": ['2E/2F 2006-2011', 'FL 2011-2017', 'SY/SZ 2017-2026'],
+        "Transporter": ['T4 1990-2003', 'T5 2003-2009', 'T5 FL 2009-2016', 'T6 2016-2019', 'T6 FL 2019-2024', 'T7 2024-2026'],
+        "Amarok": ['2H 2010-2016', '2H FL 2016-2022', 'NF 2022–2026'],
+        "ID. Buzz": ['T5 2003–2015', 'T6 2015–2024', 'T7 2024–2026'],
     },
     "Audi": {
         "A1": ['2010-2018 (8X)', '2018-2026 (GB)'],
         "A2": ['8Z 1999-2005'],
-        "A3": ['8L 1996-2003', '8P 2003-2012', '8V 2012-2020', '8Y 2020-2026'],
+        "A3": ['8L 1996-2003', '8P 2003-2008', '8P FL 2008-2012', '8V 2012-2020', '8Y 2020-2026'],
         "A4": ['B5 1994-2000', 'B6 2000-2004', 'B7 2004-2007', 'B8 2007-2015', 'B9 2015-2024', 'B10 2024-2026'],
         "A5": ['8T 2007-2016', 'F5 2016-2024', 'B10 2024-2026'],
         "A6": ['C4 1994-1997', 'C5 1997-2004', 'C6 2004-2011', 'C7 2011-2018', 'C8 2018-2024', 'C9 (A7) 2024-2026'],
@@ -211,6 +216,9 @@ const generationData = {
         "EQS": ['V297 2021-2026'],
         "EQT": ['W420 2023-2026'],
         "EQV": ['W447 2020-2026'],
+        "Sprinter": ['W905 1995-2006', 'W906 2006-2014', 'W906 FL 2014-2019', 'W907 2019-2026'],
+        "Vito": ['W638 1996-2003', 'W639 2003-2010', 'W639 FL 2010-2014', 'W447 2014-2020', 'W447 FL 2020-2026'],
+        "Citan": ['W415 2012-2016', 'W415 FL 2016-2021', 'W420 2021-2026'],
         },
     "Ford": {
         "Fiesta": ['Mk4 1995-2002','Mk5 2002-2008', 'Mk6 2008-2017', 'Mk7 2017-2023'],
@@ -227,6 +235,13 @@ const generationData = {
         "Galaxy": ['Mk3 2006-2015', 'Mk4 2015-2023'],
         "EcoSport": ['BV226 2003-2012', 'B515 2012-2023'],
         "Edge": ['Mk1 2007-2015', 'Mk2 2015-2024'],
+        "Bronco": ['Mk6 2021-2026'],
+        "Expedition": ['Mk1 1997-2003', 'Mk2 2003-2007', 'Mk3 2007-2018', 'Mk4 2018-2025', 'Mk5 2025-2026'],
+        "Ranger": ['MK1 1998-2006', 'MK2 2006-2009', 'MK2 FL 2009-2011', 'MK3 2011-2022', 'MK4 2022-2026'],
+        "T Courier": ['Mk1 2014-2023', 'Mk2 2023-2026'],
+        "T Connect": ['Mk1 2007-2009', 'Mk1 FL 2009-2012', , 'Mk2 2012-2019', 'Mk2 FL 2019-2021', 'Mk3 2021-2026'],
+        "T Custom": ['Mk1 2012-2023', 'Mk2 2023-2026'],
+        "Transit": ['Mk3 2000-2006', 'Mk3 FL 2006-2014', 'MK4 2014-2020', '2020-2026'],
         },
     "Toyota": {
         "Yaris": ['XP90 2005-2011', 'XP130 2011-2020', 'XP210 2020-2026'],
@@ -271,6 +286,7 @@ const generationData = {
         "Symbioz": ['2024-2026'],
         "Kangoo": ['Gen 2 2007-2021', 'Gen 3 2021-2026'],
         "Talisman": ['2015-2022'],
+        "Trafic": ['MK2 2001-2014', 'MK3 2014-2021', 'MK3 FL 2021-2026'],
         },
     "Fiat": {
         "500": ['Gen 2 2007-2024', '500e 2020-2026'],
@@ -494,6 +510,11 @@ const generationData = {
         "e": ['2020–2024'],
         "Accord": ['Gen 8 2008–2015', 'Gen 9 2013–2017', 'Gen 10 2017–2022', 'Gen 11 2023–2026'],
         "NSX": ['NC1 2016–2022'],
+        },
+    "Smart": {
+        "ForTwo": ['W450 1998-2007', 'W451 2007-2014', 'W453 2014-2024'],
+        "ForFour": ['W454 2004-2006', 'W453 2014-2024'],
+        "Roadster": ['W452 2003-2005'],
         },
     "Mitsubishi": {
         "Space Star": ['2012–2026'],
