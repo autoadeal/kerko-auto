@@ -133,7 +133,7 @@
             <a href="{{ url_for('vehicle_details', car_id=car.id) }}" class="car-listing-card">
                 <div class="car-listing-image-wrap">
                     {% if car.main_image %}
-                        <img src="{{ url_for('static', filename='images/uploads/' + car.main_image) }}"
+                        <img src="{{ url_for('uploaded_file', filename=car.main_image) }}"
                             alt="{{ car.marka }} {{ car.modeli }}{% if car.viti %} {{ car.viti }}{% endif %} për shitje{% if car.location %} — {{ car.location }}{% endif %}"
                             loading="lazy" width="400" height="280">
                     {% else %}

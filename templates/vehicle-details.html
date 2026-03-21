@@ -4,9 +4,9 @@
 {% block og_type %}product{% endblock %}
 {% block og_title %}{{ car.marka }} {{ car.modeli }}{% if car.viti %} {{ car.viti }}{% endif %} — {{ "{:,.0f}".format(car.cmimi) }} {{ car.currency }} | Kerko Auto{% endblock %}
 {% block og_description %}{{ car.marka }} {{ car.modeli }}{% if car.viti %} {{ car.viti }}{% endif %} për shitje{% if car.location %} në {{ car.location }}{% endif %}. Çmimi: {{ "{:,.0f}".format(car.cmimi) }} {{ car.currency }}.{% endblock %}
-{% block og_image %}{% if images %}{{ request.host_url }}static/images/uploads/{{ images[0].filename }}{% else %}{{ request.host_url }}static/images/og-default.jpg{% endif %}{% endblock %}
+{% block og_image %}{% if images %}{{ request.host_url }}uploads/{{ images[0].filename }}{% else %}{{ request.host_url }}static/images/og-default.jpg{% endif %}{% endblock %}
 {% block twitter_title %}{{ car.marka }} {{ car.modeli }}{% if car.viti %} {{ car.viti }}{% endif %} — {{ "{:,.0f}".format(car.cmimi) }} {{ car.currency }} | Kerko Auto{% endblock %}
-{% block twitter_image %}{% if images %}{{ request.host_url }}static/images/uploads/{{ images[0].filename }}{% else %}{{ request.host_url }}static/images/og-default.jpg{% endif %}{% endblock %}
+{% block twitter_image %}{% if images %}{{ request.host_url }}uploads/{{ images[0].filename }}{% else %}{{ request.host_url }}static/images/og-default.jpg{% endif %}{% endblock %}
 {% block content %}
 <div class="container" style="padding-top:40px;">
 
@@ -22,7 +22,7 @@
             {% if images %}
             <div style="position:relative;" id="main-img-wrap">
                 <img id="main-img"
-                     src="{{ url_for('static', filename='images/uploads/' + images[0].filename) }}"
+                     src="{{ url_for('uploaded_file', filename=images[0].filename) }}"
                      alt="{{ car.marka }} {{ car.modeli }}{% if car.viti %} {{ car.viti }}{% endif %} — foto kryesore"
                      style="width:100%;height:450px;object-fit:cover;border-radius:12px;margin-bottom:10px;cursor:zoom-in;"
                      onclick="openLightbox(currentIndex)">
@@ -36,7 +36,7 @@
 
             <div style="display:flex;gap:10px;flex-wrap:wrap;">
                 {% for img in images %}
-                <img src="{{ url_for('static', filename='images/uploads/' + img.filename) }}"
+                <img src="{{ url_for('uploaded_file', filename=s.main_image) }}"
                      onclick="setMain({{ loop.index0 }})"
                      class="thumb-img"
                      alt="{{ car.marka }} {{ car.modeli }} — foto {{ loop.index }}"
@@ -192,7 +192,7 @@
   {% if car.kambio %},"vehicleTransmission": "{{ car.kambio }}"{% endif %}
   {% if car.forma %},"bodyType": "{{ car.forma }}"{% endif %}
   {% if car.location %},"vehicleConfiguration": "{{ car.location }}"{% endif %}
-  {% if images %},"image": "{{ request.host_url }}static/images/uploads/{{ images[0].filename }}"{% endif %}
+  {% if images %},"image": "{{ request.host_url }}uploads/{{ images[0].filename }}"{% endif %}
   ,"offers": {
     "@type": "Offer",
     "price": "{{ car.cmimi }}",
@@ -264,7 +264,7 @@
 <script>
     const imageUrls = [
         {% for img in images %}
-        "{{ url_for('static', filename='images/uploads/' + img.filename) }}"{% if not loop.last %},{% endif %}
+        "{{ url_for('uploaded_file', filename=img.filename) }}"{% if not loop.last %},{% endif %}
         {% endfor %}
     ];
     let currentIndex = 0;
