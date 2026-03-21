@@ -10,8 +10,10 @@ from werkzeug.utils import secure_filename
 from authlib.integrations.flask_client import OAuth
 from datetime import timedelta
 from whitenoise import WhiteNoise
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 app = Flask(__name__)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 app.wsgi_app = WhiteNoise(app.wsgi_app, root="static/")
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret-change-in-production")
 
