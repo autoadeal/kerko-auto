@@ -22,10 +22,10 @@
             {% if images %}
             <div style="position:relative;" id="main-img-wrap">
                 <img id="main-img"
-                     src="{{ url_for('uploaded_file', filename=images[0].filename) }}"
-                     alt="{{ car.marka }} {{ car.modeli }}{% if car.viti %} {{ car.viti }}{% endif %} — foto kryesore"
-                     style="width:100%;height:450px;object-fit:cover;border-radius:12px;margin-bottom:10px;cursor:zoom-in;"
-                     onclick="openLightbox(currentIndex)">
+                    src="{{ url_for('uploaded_file', filename=images[0].filename) }}"
+                    alt="{{ car.marka }} {{ car.modeli }}"
+                    style="width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 12px; margin-bottom: 10px; cursor: zoom-in;"
+                    onclick="openLightbox(currentIndex)">
 
                 <!-- Prev / Next on main image -->
                 {% if images|length > 1 %}
