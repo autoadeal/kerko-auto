@@ -560,11 +560,7 @@ def admin_car_action(car_id, action):
 @admin_required
 def admin_blog_add():
     db = get_db()
-    image_filename = None
-    f = request.files.get("image")
-    if f and allowed_file(f.filename):
-        image_filename = secure_filename(f"blog_{f.filename}")
-        f.save(os.path.join(app.config["UPLOAD_FOLDER"], image_filename))
+    image_filename = request.form.get("image_filename") or None 
 
     db.execute(
         "INSERT INTO blogs (title, category, content, image, author_id) VALUES (?,?,?,?,?)",

@@ -22,7 +22,7 @@
                         <span class="blog-badge">NEW</span>
                     {% endif %}
                     {% if post.image %}
-                        <img src="{{ url_for('static', filename='images/uploads/' ~ post.image) }}" alt="{{ post.title }}" class="blog-card-image">
+                        <img src="{{ url_for('static', filename='images/blog/' + post.image) }}" alt="{{ post.title }}" class="blog-card-image">
                     {% else %}
                         <img src="{{ url_for('static', filename='images/placeholder-car.jpg') }}" alt="Placeholder" class="blog-card-image">
                     {% endif %}
@@ -46,7 +46,7 @@
                 <a href="{{ url_for('blog_post', blog_id=post.id) }}" class="blog-card">
                     <div class="blog-card-image-wrapper">
                         {% if post.image %}
-                            <img src="{{ url_for('static', filename='images/uploads/' ~ post.image) }}" alt="{{ post.title }}" class="blog-card-image">
+                            <img src="{{ url_for('static', filename='images/blog/' + post.image) }}" alt="{{ post.title }}" class="blog-card-image">
                         {% else %}
                             <img src="{{ url_for('static', filename='images/placeholder-car.jpg') }}" alt="Placeholder" class="blog-card-image">
                         {% endif %}

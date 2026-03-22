@@ -79,11 +79,11 @@
             <!-- Add Blog Form -->
             <div id="add-blog-form" style="display:none;background:white;padding:25px;border-radius:12px;margin-bottom:25px;border:1px solid #eee;">
                 <h4 style="margin-bottom:15px;">Shto Artikull të Ri</h4>
-                <form action="{{ url_for('admin_blog_add') }}" method="POST" enctype="multipart/form-data" style="display:flex;flex-direction:column;gap:12px;">
+                <form action="{{ url_for('admin_blog_add') }}" method="POST" style="display:flex;flex-direction:column;gap:12px;">
                     <input type="text" name="title" placeholder="Titulli" required style="padding:10px;border:1px solid #ddd;border-radius:6px;">
                     <input type="text" name="category" placeholder="Kategoria (p.sh. TË REJAT)" style="padding:10px;border:1px solid #ddd;border-radius:6px;">
                     <textarea name="content" rows="6" placeholder="Përmbajtja..." required style="padding:10px;border:1px solid #ddd;border-radius:6px;resize:vertical;"></textarea>
-                    <input type="file" name="image" accept="image/*" style="padding:10px;">
+                    <input type="text" name="image_filename" placeholder="Emri i figurës (p.sh. blog-makina.jpg)" style="padding:10px;border:1px solid #ddd;border-radius:6px;">
                     <div style="display:flex;gap:10px;">
                         <button type="submit" class="btn-primary">Publiko</button>
                         <button type="button" onclick="document.getElementById('add-blog-form').style.display='none'" style="padding:10px 20px;border:1px solid #ddd;border-radius:20px;background:none;cursor:pointer;">Anulo</button>
@@ -96,7 +96,7 @@
                 {% for post in blogs %}
                 <div style="background:white;border-radius:8px;overflow:hidden;border:1px solid #ddd;">
                     {% if post.image %}
-                    <img src="{{ url_for('static', filename='images/uploads/' + post.image) }}" style="width:100%;height:120px;object-fit:cover;">
+                    <img src="{{ url_for('static', filename='images/blog/' + post.image) }}" style="width:100%;height:120px;object-fit:cover;">
                     {% else %}
                     <div style="width:100%;height:120px;background:#f0f0f0;display:flex;align-items:center;justify-content:center;"><i class="fa-solid fa-image" style="color:#ccc;font-size:30px;"></i></div>
                     {% endif %}

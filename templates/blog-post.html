@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block meta_description %}{{ post.content | striptags | truncate(155, true, '...') }}{% endblock %}
 {% block og_title %}{{ post.title }} | Kerko Auto{% endblock %}
-{% block og_image %}{% if post.image %}{{ request.host_url }}static/images/uploads/{{ post.image }}{% else %}{{ request.host_url }}static/images/og-default.jpg{% endif %}{% endblock %}
+{% block og_image %}{% if post.image %}{{ request.host_url }}static/images/blog/{{ post.image }}{% else %}{{ request.host_url }}static/images/og-default.jpg{% endif %}{% endblock %}
 {% block title %}{{ post.title }} - Kerko Auto{% endblock %}
 {% block header_class %}white-bg{% endblock %}
 
@@ -21,7 +21,7 @@
         </div>
 
         {% if post.image %}
-        <img src="{{ url_for('static', filename='images/uploads/' + post.image) }}" alt="{{ post.title }}"
+        <img src="{{ url_for('static', filename='images/blog/' + post.image) }}" alt="{{ post.title }}"
              class="blog-post-image">
         {% endif %}
 
