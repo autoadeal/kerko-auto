@@ -1,0 +1,563 @@
+{% extends "base.html" %}
+{% block title %}Vlerëso Mjetin - Kerko Auto{% endblock %}
+
+{% block content %}
+<div class="valuation-hero">
+    <div class="valuation-hero-inner">
+        <span class="val-badge">BETA</span>
+        <h1>Vlerëso Mjetin Tënd</h1>
+        <p>Plotëso të dhënat e mjetit dhe merr një vlerësim të menjëhershëm bazuar në tregun shqiptar.</p>
+    </div>
+</div>
+
+<div class="valuation-wrapper">
+
+    <!-- Progress Bar -->
+    <div class="val-progress-bar-container">
+        <div class="val-progress-track">
+            <div class="val-progress-fill" id="valProgressFill"></div>
+        </div>
+        <div class="val-steps-dots">
+            <div class="val-dot active" data-step="1"><span>1</span><label>Mjeti</label></div>
+            <div class="val-dot" data-step="2"><span>2</span><label>Estetika</label></div>
+            <div class="val-dot" data-step="3"><span>3</span><label>Gjendja</label></div>
+            <div class="val-dot" data-step="4"><span>4</span><label>Trupi</label></div>
+            <div class="val-dot" data-step="5"><span>5</span><label>Modifikime</label></div>
+        </div>
+    </div>
+
+    <form id="valuationForm" novalidate>
+
+        <!-- STEP 1: Vehicle Identity -->
+        <div class="val-step active" id="step-1">
+            <div class="val-card">
+                <div class="val-card-header">
+                    <i class="fa-solid fa-car"></i>
+                    <div>
+                        <h3>Të Dhënat e Mjetit</h3>
+                        <p>Marka, modeli, viti dhe motori</p>
+                    </div>
+                </div>
+                <div class="val-grid">
+                    <div class="val-field">
+                        <label>Marka *</label>
+                        <select id="val-marka" required onchange="valPopulateModels()">
+                            <option value="">Zgjidh Markën</option>
+                        </select>
+                    </div>
+                    <div class="val-field">
+                        <label>Modeli *</label>
+                        <select id="val-modeli" required onchange="valPopulateEngines(); valPopulateColors()">
+                            <option value="">Zgjidh Modelin</option>
+                        </select>
+                    </div>
+                    <div class="val-field">
+                        <label>Viti *</label>
+                        <input type="number" id="val-viti" min="1990" max="2026" placeholder="p.sh. 2015" required oninput="valPopulateEngines()">
+                    </div>
+                    <div class="val-field">
+                        <label>Lloji i Motorit *</label>
+                        <select id="val-engine" required>
+                            <option value="">Zgjidh motorin</option>
+                        </select>
+                        <p class="val-hint" id="val-engine-hint">Fillimisht zgjidh markën, modelin dhe vitin.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 2: Exterior / Interior / Options -->
+        <div class="val-step" id="step-2">
+            <div class="val-card">
+                <div class="val-card-header">
+                    <i class="fa-solid fa-palette"></i>
+                    <div>
+                        <h3>Estetika & Opsionet</h3>
+                        <p>Ngjyra dhe opsionet shtese</p>
+                    </div>
+                </div>
+                <div class="val-grid">
+                    <div class="val-field">
+                        <label>Ngjyra e Jashtme *</label>
+                        <select id="val-ext-color" required>
+                            <option value="">Zgjidh ngjyrën</option>
+                        </select>
+                    </div>
+                    <div class="val-field">
+                        <label>Ngjyra e Brendshme *</label>
+                        <select id="val-int-color" required>
+                            <option value="">Zgjidh ngjyrën</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="val-field val-field-full">
+                    <label>Opsionet (zgjidhni të gjitha opsionet që ka makina)</label>
+                    <div class="val-options-grid" id="val-options-grid">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 3: Condition -->
+        <div class="val-step" id="step-3">
+            <div class="val-card">
+                <div class="val-card-header">
+                    <i class="fa-solid fa-clipboard-check"></i>
+                    <div>
+                        <h3>Gjendja Mekanike & Brendshme</h3>
+                        <p>Aksidentet, dëmtimet dhe problemet</p>
+                    </div>
+                </div>
+
+                <!-- Status -->
+                <div class="val-field">
+                    <label>Statusi *</label>
+                    <div class="val-radio-group">
+                        <label class="val-radio-btn"><input type="radio" name="status" value="clean" required><span>I Pastër</span></label>
+                        <label class="val-radio-btn"><input type="radio" name="status" value="accident"><span>I Aksidentuar</span></label>
+                        <label class="val-radio-btn"><input type="radio" name="status" value="parts"><span>Vetëm për Pjesë</span></label>
+                    </div>
+                </div>
+
+                <!-- Mileage -->
+                <div class="val-field">
+                    <label>Kilometra *</label>
+                    <input type="number" id="val-km" placeholder="p.sh. 150000" min="0" required>
+                </div>
+
+                <div class="val-divider"></div>
+                <p class="val-section-label"><i class="fa-solid fa-triangle-exclamation"></i> Aksidentet & Dëmtimet Strukturore</p>
+
+                <div class="val-grid val-grid-3">
+                    <!-- Major Accident -->
+                    <div class="val-field">
+                        <label>Aksident i Rëndë</label>
+                        <div class="val-toggle-group" data-field="major-accident">
+                            <button type="button" class="val-toggle active" data-val="no">Jo</button>
+                            <button type="button" class="val-toggle" data-val="yes">Po</button>
+                        </div>
+                    </div>
+                    <!-- Frame Damage -->
+                    <div class="val-field">
+                        <label>Dëmtim i Shasisë</label>
+                        <div class="val-toggle-group" data-field="frame-damage">
+                            <button type="button" class="val-toggle active" data-val="no">Jo</button>
+                            <button type="button" class="val-toggle" data-val="yes">Po</button>
+                        </div>
+                    </div>
+                    <!-- Flood Damage -->
+                    <div class="val-field">
+                        <label>Dëmtim nga Përmbytja</label>
+                        <div class="val-toggle-group" data-field="flood-damage">
+                            <button type="button" class="val-toggle active" data-val="no">Jo</button>
+                            <button type="button" class="val-toggle" data-val="yes">Po</button>
+                        </div>
+                    </div>
+                    <!-- Smoked -->
+                    <div class="val-field">
+                        <label>Duhanpirje Brenda</label>
+                        <div class="val-toggle-group" data-field="smoked">
+                            <button type="button" class="val-toggle active" data-val="no">Jo</button>
+                            <button type="button" class="val-toggle" data-val="yes">Po</button>
+                        </div>
+                    </div>
+                    <!-- Fire Damage (moved here contextually) -->
+                    <div class="val-field">
+                        <label>Dëmtim nga Zjarri</label>
+                        <div class="val-toggle-group" data-field="fire-damage">
+                            <button type="button" class="val-toggle active" data-val="no">Jo</button>
+                            <button type="button" class="val-toggle" data-val="yes">Po</button>
+                        </div>
+                    </div>
+                    <!-- Keys -->
+                    <div class="val-field">
+                        <label>Çelësa</label>
+                        <div class="val-toggle-group" data-field="keys">
+                            <button type="button" class="val-toggle active" data-val="2+">2+</button>
+                            <button type="button" class="val-toggle" data-val="1">1</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="val-divider"></div>
+                <p class="val-section-label"><i class="fa-solid fa-engine"></i> Mekanika</p>
+
+                <div class="val-grid val-grid-3">
+                    <!-- Engine Issues -->
+                    <div class="val-field">
+                        <label>Probleme me Motorin</label>
+                        <div class="val-toggle-group" data-field="engine-issues">
+                            <button type="button" class="val-toggle active" data-val="no">Jo</button>
+                            <button type="button" class="val-toggle" data-val="yes">Po</button>
+                        </div>
+                    </div>
+                    <!-- Transmission Issues -->
+                    <div class="val-field">
+                        <label>Probleme me Kambion</label>
+                        <div class="val-toggle-group" data-field="trans-issues">
+                            <button type="button" class="val-toggle active" data-val="no">Jo</button>
+                            <button type="button" class="val-toggle" data-val="yes">Po</button>
+                        </div>
+                    </div>
+                    <!-- AC Issues -->
+                    <div class="val-field">
+                        <label>Probleme me AC</label>
+                        <div class="val-toggle-group" data-field="ac-issues">
+                            <button type="button" class="val-toggle active" data-val="no">Jo</button>
+                            <button type="button" class="val-toggle" data-val="yes">Po</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Leaks -->
+                <div class="val-field">
+                    <label>Rrjedhje</label>
+                    <div class="val-toggle-group" data-field="leaks">
+                        <button type="button" class="val-toggle active" data-val="no">Jo</button>
+                        <button type="button" class="val-toggle" data-val="yes">Po</button>
+                    </div>
+                    <div class="val-sub-options hidden" id="leaks-sub">
+                        <label class="val-check"><input type="checkbox" name="leak-coolant"> Ftohës (Coolant)</label>
+                        <label class="val-check"><input type="checkbox" name="leak-engine"> Vaj Motori</label>
+                        <label class="val-check"><input type="checkbox" name="leak-trans"> Vaj Kambio</label>
+                    </div>
+                </div>
+
+                <div class="val-divider"></div>
+                <p class="val-section-label"><i class="fa-solid fa-gauge-high"></i> Dritat e Paralajmërimit</p>
+
+                <div class="val-field">
+                    <label>Errore të Ndezura</label>
+                    <div class="val-toggle-group" data-field="warning-lights">
+                        <button type="button" class="val-toggle active" data-val="no">Jo</button>
+                        <button type="button" class="val-toggle" data-val="yes">Po</button>
+                    </div>
+                    <div class="val-sub-options hidden" id="warning-lights-sub">
+                        <div class="val-checks-grid">
+                            <label class="val-check"><input type="checkbox" name="wl-check-engine"> Check Engine</label>
+                            <label class="val-check"><input type="checkbox" name="wl-oil"> Presion Vaji</label>
+                            <label class="val-check"><input type="checkbox" name="wl-battery"> Bateri</label>
+                            <label class="val-check"><input type="checkbox" name="wl-airbag"> Airbag</label>
+                            <label class="val-check"><input type="checkbox" name="wl-abs"> ABS</label>
+                            <label class="val-check"><input type="checkbox" name="wl-traction"> Traction Control</label>
+                            <label class="val-check"><input type="checkbox" name="wl-dpf"> DPF</label>
+                            <label class="val-check"><input type="checkbox" name="wl-other"> Tjetër</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="val-divider"></div>
+                <p class="val-section-label"><i class="fa-solid fa-couch"></i> Brendësia</p>
+
+                <!-- Broken Parts -->
+                <div class="val-field">
+                    <label>Pjesë të Thyera Brenda</label>
+                    <div class="val-toggle-group" data-field="broken-parts">
+                        <button type="button" class="val-toggle active" data-val="no">Jo</button>
+                        <button type="button" class="val-toggle" data-val="yes">Po</button>
+                    </div>
+                    <div class="val-sub-options hidden" id="broken-parts-sub">
+                        <div class="val-checks-grid">
+                            <label class="val-check"><input type="checkbox" name="bp-dash"> Butona të Tjerë Kroskoti</label>
+                            <label class="val-check"><input type="checkbox" name="bp-ac-controls"> Kontroll AC</label>
+                            <label class="val-check"><input type="checkbox" name="bp-window"> Kontroll Xhamash</label>
+                            <label class="val-check"><input type="checkbox" name="bp-mirror"> Kontroll Pasqyrash</label>
+                            <label class="val-check"><input type="checkbox" name="bp-seat"> Sedilje e Dëmtuar</label>
+                            <label class="val-check"><input type="checkbox" name="bp-infotain"> Navigation</label>
+                            <label class="val-check"><input type="checkbox" name="bp-handle"> Dorezë e Thyer</label>
+                            <label class="val-check"><input type="checkbox" name="bp-seatbelt"> Rrip Sigurimi</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Interior Damage -->
+                <div class="val-field">
+                    <label>Dëmtime të Brendshme</label>
+                    <div class="val-toggle-group" data-field="interior-damage">
+                        <button type="button" class="val-toggle active" data-val="no">Jo</button>
+                        <button type="button" class="val-toggle" data-val="yes">Po</button>
+                    </div>
+                    <div class="val-sub-options hidden" id="interior-damage-sub">
+                        <label class="val-check"><input type="checkbox" name="id-rips"> Grisje / Çarje</label>
+                        <label class="val-check"><input type="checkbox" name="id-stains"> Njolla</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 4: Body & Exterior Damage -->
+        <div class="val-step" id="step-4">
+            <div class="val-card">
+                <div class="val-card-header">
+                    <i class="fa-solid fa-car-burst"></i>
+                    <div>
+                        <h3>Karoserija & Rrotat</h3>
+                        <p>Dëmtimet e jashtme, ndryshku dhe rrotat</p>
+                    </div>
+                </div>
+
+                <!-- Bad Body Work -->
+                <div class="val-field">
+                    <label>Dëmtime Panelesh</label>
+                    <div class="val-toggle-group" data-field="bad-bodywork">
+                        <button type="button" class="val-toggle active" data-val="no">Jo</button>
+                        <button type="button" class="val-toggle" data-val="yes">Po</button>
+                    </div>
+                    <div class="val-sub-options hidden" id="bad-bodywork-sub">
+                        <label class="val-hint-sm">Sa panele kanë punë të keqe?</label>
+                        <div class="val-checks-grid">
+                            <label class="val-check"><input type="checkbox" name="bw-hood"> Kofano</label>
+                            <label class="val-check"><input type="checkbox" name="bw-roof"> Parakolp</label>
+                            <label class="val-check"><input type="checkbox" name="bw-trunk"> Parafango e Majtë</label>
+                            <label class="val-check"><input type="checkbox" name="bw-fl"> Parafango e Djathtë</label>
+                            <label class="val-check"><input type="checkbox" name="bw-fr"> Derë e Majtë</label>
+                            <label class="val-check"><input type="checkbox" name="bw-rl"> Derë e Djathtë</label>
+                            <label class="val-check"><input type="checkbox" name="bw-rr"> Vije Trupi e Majtë</label>
+                            <label class="val-check"><input type="checkbox" name="bw-dfl"> Vije Trupi e Djathtë</label>
+                            <label class="val-check"><input type="checkbox" name="bw-dfr"> Çati</label>
+                            <label class="val-check"><input type="checkbox" name="bw-drl"> Bagazh</label>
+                            <label class="val-check"><input type="checkbox" name="bw-drr"> Mbrapakolp</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Body Damage -->
+                <div class="val-field">
+                    <label>Lloji i Dëmtimit</label>
+                    <div class="val-toggle-group" data-field="body-damage">
+                        <button type="button" class="val-toggle active" data-val="no">Jo</button>
+                        <button type="button" class="val-toggle" data-val="yes">Po</button>
+                    </div>
+                    <div class="val-sub-options hidden" id="body-damage-sub">
+                        <label class="val-hint-sm">Lloji i dëmtimit dhe numri i paneleve:</label>
+                        <div class="val-damage-table">
+                            <div class="val-damage-row">
+                                <span>Gropë</span>
+                                <div class="val-panel-counter" data-damage="dents">
+                                    <button type="button" class="counter-btn" onclick="changeCounter(this,-1)">−</button>
+                                    <span class="counter-val">0</span>
+                                    <button type="button" class="counter-btn" onclick="changeCounter(this,1)">+</button>
+                                </div>
+                            </div>
+                            <div class="val-damage-row">
+                                <span>Gërvishje</span>
+                                <div class="val-panel-counter" data-damage="scratches">
+                                    <button type="button" class="counter-btn" onclick="changeCounter(this,-1)">−</button>
+                                    <span class="counter-val">0</span>
+                                    <button type="button" class="counter-btn" onclick="changeCounter(this,1)">+</button>
+                                </div>
+                            </div>
+                            <div class="val-damage-row">
+                                <span>Goditje</span>
+                                <div class="val-panel-counter" data-damage="scuffs">
+                                    <button type="button" class="counter-btn" onclick="changeCounter(this,-1)">−</button>
+                                    <span class="counter-val">0</span>
+                                    <button type="button" class="counter-btn" onclick="changeCounter(this,1)">+</button>
+                                </div>
+                            </div>
+                            <div class="val-damage-row">
+                                <span>Rënie boje</span>
+                                <div class="val-panel-counter" data-damage="chipped">
+                                    <button type="button" class="counter-btn" onclick="changeCounter(this,-1)">−</button>
+                                    <span class="counter-val">0</span>
+                                    <button type="button" class="counter-btn" onclick="changeCounter(this,1)">+</button>
+                                </div>
+                            </div>
+                            <div class="val-damage-row">
+                                <span>Zbehje</span>
+                                <div class="val-panel-counter" data-damage="faded">
+                                    <button type="button" class="counter-btn" onclick="changeCounter(this,-1)">−</button>
+                                    <span class="counter-val">0</span>
+                                    <button type="button" class="counter-btn" onclick="changeCounter(this,1)">+</button>
+                                </div>
+                            </div>
+                            <div class="val-damage-row">
+                                <span>Panel qe Mungon</span>
+                                <div class="val-panel-counter" data-damage="missing">
+                                    <button type="button" class="counter-btn" onclick="changeCounter(this,-1)">−</button>
+                                    <span class="counter-val">0</span>
+                                    <button type="button" class="counter-btn" onclick="changeCounter(this,1)">+</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Rust -->
+                <div class="val-field">
+                    <label>Ndryshk</label>
+                    <div class="val-toggle-group" data-field="rust">
+                        <button type="button" class="val-toggle active" data-val="no">Jo</button>
+                        <button type="button" class="val-toggle" data-val="yes">Po</button>
+                    </div>
+                    <div class="val-sub-options hidden" id="rust-sub">
+                        <div class="val-radio-group">
+                            <label class="val-radio-btn"><input type="radio" name="rust-level" value="little"><span>Pak</span></label>
+                            <label class="val-radio-btn"><input type="radio" name="rust-level" value="average"><span>Mesatar</span></label>
+                            <label class="val-radio-btn"><input type="radio" name="rust-level" value="plenty"><span>Shumë</span></label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Damaged Windows -->
+                <div class="val-field">
+                    <label>Xhama të Dëmtuar</label>
+                    <div class="val-toggle-group" data-field="damaged-windows">
+                        <button type="button" class="val-toggle active" data-val="no">Jo</button>
+                        <button type="button" class="val-toggle" data-val="yes">Po</button>
+                    </div>
+                    <div class="val-sub-options hidden" id="damaged-windows-sub">
+                        <div class="val-checks-grid">
+                            <label class="val-check"><input type="checkbox" name="win-front"> Xhami Para</label>
+                            <label class="val-check"><input type="checkbox" name="win-back"> Xhami Prapa</label>
+                            <label class="val-check"><input type="checkbox" name="win-door1"> 1 Xham Anësor</label>
+                            <label class="val-check"><input type="checkbox" name="win-door2"> 2 Xhama Anësore</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tires -->
+                <div class="val-field">
+                    <label>Gomë për t'u Ndërruar</label>
+                    <div class="val-toggle-group" data-field="tires">
+                        <button type="button" class="val-toggle active" data-val="no">Jo</button>
+                        <button type="button" class="val-toggle" data-val="2">2 Goma</button>
+                        <button type="button" class="val-toggle" data-val="4">4 Goma</button>
+                    </div>
+                </div>
+
+                <!-- Wheels Damage -->
+                <div class="val-field">
+                    <label>Dëmtime Diqesh</label>
+                    <div class="val-toggle-group" data-field="wheels">
+                        <button type="button" class="val-toggle active" data-val="no">Jo</button>
+                        <button type="button" class="val-toggle" data-val="yes">Po</button>
+                    </div>
+                    <div class="val-sub-options hidden" id="wheels-sub">
+                        <div class="val-radio-group">
+                            <label class="val-radio-btn"><input type="radio" name="wheel-damage" value="dent"><span>Deformim / Goditje</span></label>
+                            <label class="val-radio-btn"><input type="radio" name="wheel-damage" value="rash"><span>Gërvishje / Ndryshk</span></label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 5: Aftermarket Mods -->
+        <div class="val-step" id="step-5">
+            <div class="val-card">
+                <div class="val-card-header">
+                    <i class="fa-solid fa-wrench"></i>
+                    <div>
+                        <h3>Modifikime</h3>
+                        <p>Ndryshime nga konfigurimi i fabrikës</p>
+                    </div>
+                </div>
+
+                <div class="val-field">
+                    <label>Ka Modifikime?</label>
+                    <div class="val-toggle-group" data-field="mods">
+                        <button type="button" class="val-toggle active" data-val="no">Jo</button>
+                        <button type="button" class="val-toggle" data-val="yes">Po</button>
+                    </div>
+                    <div class="val-sub-options hidden" id="mods-sub">
+                        <div class="val-checks-grid">
+                            <label class="val-check"><input type="checkbox" name="mod-suspension"> Amortizator</label>
+                            <label class="val-check"><input type="checkbox" name="mod-engine"> Motor</label>
+                            <label class="val-check"><input type="checkbox" name="mod-trans"> Kambio</label>
+                            <label class="val-check"><input type="checkbox" name="mod-turbo"> Turbo</label>
+                            <label class="val-check"><input type="checkbox" name="mod-other-mech"> Mekanike Tjetër</label>
+                            <label class="val-check"><input type="checkbox" name="mod-vinyl"> Veshje Vinyl</label>
+                            <label class="val-check"><input type="checkbox" name="mod-bodypart"> Panel i Modifikuar</label>
+                            <label class="val-check"><input type="checkbox" name="mod-tint"> Xhama të Zeza</label>
+                            <label class="val-check"><input type="checkbox" name="mod-spoiler"> Difuzor</label>
+                            <label class="val-check"><input type="checkbox" name="mod-wing"> Bisht</label>
+                            <label class="val-check"><input type="checkbox" name="mod-accessories"> Aksesore të Tjera</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Buttons -->
+        <div class="val-nav-btns">
+            <button type="button" class="val-btn-back" id="valBtnBack" onclick="valNavigate(-1)" style="display:none">
+                <i class="fa-solid fa-arrow-left"></i> Prapa
+            </button>
+            <button type="button" class="val-btn-next" id="valBtnNext" onclick="valNavigate(1)">
+                Tjetër <i class="fa-solid fa-arrow-right"></i>
+            </button>
+            <button type="button" class="val-btn-submit btn-primary" id="valBtnSubmit" onclick="calculateValuation()" style="display:none">
+                <i class="fa-solid fa-calculator"></i> Vlerëso Mjetin
+            </button>
+        </div>
+    </form>
+
+    <!-- No data panel -->
+    <div class="val-result hidden" id="val-no-data">
+        <div class="val-result-inner">
+            <div class="val-result-header val-result-header--empty">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                <h2>Nuk mund ta vlerësojmë</h2>
+                <p id="val-no-data-label"></p>
+            </div>
+            <div class="val-empty-body">
+                <p>Nuk kemi të dhëna të mjaftueshme për këtë mjet në tregun shqiptar për të bërë një vlerësim të saktë.</p>
+                <p>Na kontaktoni dhe do t'ju ndihmojmë personalisht.</p>
+                <div class="val-result-actions">
+                    <a href="{{ url_for('contact') }}" class="btn-primary">
+                        <i class="fa-solid fa-envelope"></i> Na Kontaktoni
+                    </a>
+                    <button class="val-btn-restart" onclick="restartValuation()">
+                        <i class="fa-solid fa-rotate-left"></i> Provo Sërish
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Result Panel -->
+    <div class="val-result hidden" id="val-result">
+        <div class="val-result-inner">
+            <div class="val-result-header">
+                <i class="fa-solid fa-star"></i>
+                <h2>Vlerësimi i Mjetit</h2>
+                <p id="val-result-car-label"></p>
+            </div>
+            <div id="val-data-warning" class="val-data-warning hidden">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <span>Vlerësimi bazohet në <strong id="val-data-count"></strong> lista — të dhënat mund të mos jenë plotësisht përfaqësuese.</span>
+            </div>
+            <div class="val-result-price-block">
+                <div class="val-price-range">
+                    <div class="val-price-item">
+                        <span class="val-price-label">Çmimi Minimal</span>
+                        <span class="val-price-val" id="val-price-low">—</span>
+                    </div>
+                    <div class="val-price-separator">↔</div>
+                    <div class="val-price-item">
+                        <span class="val-price-label">Çmimi Maksimal</span>
+                        <span class="val-price-val" id="val-price-high">—</span>
+                    </div>
+                </div>
+                <div class="val-average-price">
+                    <span>Çmimi Mesatar i Rekomanduar</span>
+                    <strong id="val-price-avg">—</strong>
+                </div>
+            </div>
+            <div class="val-factors" id="val-factors"></div>
+            <div class="val-result-actions">
+                <a href="{{ url_for('add_car') }}" class="btn-primary">
+                    <i class="fa-solid fa-plus"></i> Posto Mjetin
+                </a>
+                <button class="val-btn-restart" onclick="restartValuation()">
+                    <i class="fa-solid fa-rotate-left"></i> Vlerëso Sërish
+                </button>
+            </div>
+            <p class="val-disclaimer">* Vlerësimi është orientues dhe bazohet në <span id="val-disclaimer-count"></span> lista aktive në Kerko Auto. Çmimi final varet nga shumë faktorë të tregut.</p>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

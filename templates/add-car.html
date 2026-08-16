@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% block title %}Shto Mjetin - Kerko Auto{% endblock %}
+
+{% block content %}
+<div class="container add-car-container">
+    <div class="form-card">
+        <h2 class="form-title">Shto Mjetin Tënd</h2>
+        <p class="form-subtitle">Plotëso të dhënat. Postimi do të rishikohet nga admini para publikimit.</p>
+
+        <!-- Valuation Banner -->
+        <a href="{{ url_for('valuation') }}" class="val-promo-banner">
+            <div class="val-promo-left">
+                <div class="val-promo-icon">
+                    <i class="fa-solid fa-magnifying-glass-dollar"></i>
+                </div>
+                <div class="val-promo-text">
+                    <strong>Sa vlen makina jote?</strong>
+                    <span>Merr një vlerësim falas bazuar në tregun shqiptar para se të postosh.</span>
+                </div>
+            </div>
+            <div class="val-promo-cta">
+                <i class="fa-solid fa-calculator"></i> Vlerëso Tani
+            </div>
+        </a>
+
+        <form action="{{ url_for('add_car') }}" method="POST" enctype="multipart/form-data" id="carForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <h4 class="form-section-header">Të Dhënat Kryesore</h4>
+            
+            <div class="form-grid">
+                <div>
+                    <label>Marka *</label>
+                    <select name="marka" id="filterMarka" class="form-control" required 
+                            onchange="populateModels('filterMarka','addModeli'); updateGenerazione();">
+                        <option value="">Zgjidh Markën</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label>Modeli *</label>
+                    <select name="modeli" id="addModeli" class="form-control" required 
+                            onchange="updateGenerazione()">
+                        <option value="">Zgjidh Modelin</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label>Viti *</label>
+                    <input type="number" name="viti" id="addViti" class="form-control" required
+                           min="1990" max="2026" placeholder="p.sh. 2015"
+                           oninput="updateGenerazione()">
+                    <input type="hidden" name="generazione" id="addGenerazione">
+                    <p id="genLabel" class="gen-label-text"></p>
+                </div>
+
+                <div>
+                    <label>Karburanti *</label>
+                    <select name="karburant" class="form-control" required>
+                        <option value="">Zgjidh</option>
+                        <option value="Naftë">Naftë</option>
+                        <option value="Benzinë">Benzinë</option>
+                        <option value="Gaz (LPG)">Gaz (LPG)</option>
+                        <option value="Elektrike">Elektrike</option>
+                        <option value="Hibrid">Hibrid</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label>Kambio *</label>
+                    <select name="kambio" class="form-control" required>
+                        <option value="">Zgjidh</option>
+                        <option value="Manuale">Manuale</option>
+                        <option value="Automatike">Automatike</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label>Forma *</label>
+                    <select name="forma" class="form-control" required>
+                        <option value="">Zgjidh</option>
+                        <option value="Hatchback">Hatchback</option>
+                        <option value="Sedan">Sedan</option>
+                        <option value="Wagon">Wagon</option>
+                        <option value="SUV">SUV</option>
+                        <option value="MPV">MPV</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label>Kilometra *</label>
+                    <input type="number" name="km" placeholder="p.sh. 150000" class="form-control" required>
+                </div>
+
+                <div>
+                    <label>Lokacioni *</label>
+                    <select name="location" class="form-control" required>
+                        <option value="">Zgjidh Qytetin</option>
+                        {% for city in ['Tirane', 'Fier', 'Durres', 'Elbasan', 'Korce', 'Shkoder', 'Vlore', 'Berat', 'Lezhe', 'Diber', 'Kukes', 'Gjirokaster', 'Lushnje', 'Pogradec', 'Kavaje', 'Sarande'] %}
+                        <option value="{{ city }}">{{ city }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="span-full">
+                    <label>Çmimi *</label>
+                    <div class="price-input-group">
+                        <input type="number" name="price" id="price" class="form-control price-field" placeholder="Shkruaj Çmimin" required min="101">
+                        <select name="currency" class="form-control currency-field">
+                            <option value="EUR">EUR</option>
+                            <option value="ALL">ALL</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="span-full">
+                    <label>Përshkrimi *</label>
+                    <textarea name="description" rows="4" class="form-control textarea-fixed" placeholder="Përshkruaj mjetin tënd..." required></textarea>
+                </div>
+
+                <div class="span-full">
+                    <label>Foto (të paktën 1, maksimum 6) *</label>
+                    <div class="upload-dropzone">
+                        <input type="file" name="photos" id="photos_input" multiple accept="image/*" class="hidden-input">
+                        <label for="photos_input" id="photos_label" class="btn-primary upload-btn">SHTO FOTO</label>
+                        <p class="upload-hint">Mund të shtoni deri në 6 foto. Klikoni 'X' për të hequr.</p>
+                        <div id="photo-preview" class="preview-container"></div>
+                        <p id="photo-count-msg" class="error-msg"></p>
+                    </div>
+                </div>
+
+                <div class="span-full contact-info-section">
+                    <div class="form-grid no-margin">
+                        <div>
+                            <label>Emri *</label>
+                            <input type="text" name="contact_name" class="form-control" placeholder="Emri juaj" required>
+                        </div>
+                        <div>
+                            <label>Numri i Kontaktit *</label>
+                            <input type="tel" name="phone" class="form-control" placeholder="06X XX XX XXX" required>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-primary btn-submit-full">Posto Mjetin</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% block title %}Profili Im - Kerko Auto{% endblock %}
+
+{% block content %}
+<div class="profile-page-wrapper">
+    
+    <div class="profile-header-banner">
+        <div class="profile-header-content">
+            <div class="profile-avatar-large">
+                {% if user.avatar %}
+                    <img src="{% if 'http' in user.avatar %}{{ user.avatar }}{% else %}{{ url_for('uploaded_file', filename=user.avatar) }}{% endif %}" alt="Avatar">
+                {% else %}
+                    <div class="avatar-placeholder">{{ user.first_name[0] }}{{ user.last_name[0] if user.last_name else '' }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="profile-header-text">
+                <h2>{{ user.first_name }} {{ user.last_name }}</h2>
+                {% if user.is_verified %}
+                    <span class="verified-badge"><i class="fa-solid fa-circle-check"></i> Shitës i Verifikuar</span>
+                {% endif %}
+            </div>
+
+            <div class="profile-header-actions">
+                 <a href="{{ url_for('seller_profile', seller_id=user.id) }}" class="btn-secondary"><i class="fa-solid fa-eye"></i> Profili Publik</a>
+                 <a href="{{ url_for('logout') }}" class="btn-danger"><i class="fa-solid fa-right-from-bracket"></i> Dil</a>
+            </div>
+        </div>
+        
+        <div class="profile-nav-tabs">
+            <button class="tab-btn active" onclick="switchProfileTab('personal')"><i class="fa-solid fa-user"></i> Të dhënat e mia</button>
+            <button class="tab-btn" onclick="switchProfileTab('cars')"><i class="fa-solid fa-car"></i> Makinat e mia</button>
+        </div>
+    </div>
+
+    <main class="profile-main-area">
+        
+        <div id="personal-tab" class="profile-tab-content active-tab">
+            <div class="profile-card">
+                <form action="{{ url_for('profile') }}" method="POST" enctype="multipart/form-data" class="profile-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    
+                    <div class="form-group span-full avatar-upload-group">
+                        <label>Foto e Profilit</label>
+                        <input type="file" name="avatar" accept="image/*" class="form-control">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Emri</label>
+                        <input type="text" name="first_name" value="{{ user.first_name }}" required class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Mbiemri</label>
+                        <input type="text" name="last_name" value="{{ user.last_name }}" required class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" name="email" value="{{ user.email }}" required class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Nr. Telefoni</label>
+                        <input type="text" name="phone" value="{{ user.phone or '' }}" placeholder="+355..." class="form-control">
+                    </div>
+                    <div class="form-group span-full">
+                        <label>Qyteti (Vendndodhja)</label>
+                        <input type="text" name="city" value="{{ user.city or '' }}" placeholder="Tiranë, Durrës..." class="form-control">
+                    </div>
+
+                    <h4 class="span-full social-section-title">Rrjetet Sociale</h4>
+                    
+                    <div class="form-group">
+                        <label><i class="fa-brands fa-instagram brand-ig"></i> Instagram Username</label>
+                        <input type="text" name="instagram" value="{{ user.instagram or '' }}" placeholder="@username" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fa-brands fa-facebook brand-fb"></i> Facebook Link</label>
+                        <input type="text" name="facebook" value="{{ user.facebook or '' }}" placeholder="https://facebook.com/..." class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fa-brands fa-tiktok brand-tk"></i> TikTok Username</label>
+                        <input type="text" name="tiktok" value="{{ user.tiktok or '' }}" placeholder="@username" class="form-control">
+                    </div>
+
+                    <button type="submit" class="btn-primary span-full submit-margin">Ruaj Ndryshimet</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="cars-tab" class="profile-tab-content hidden-element">
+            <div class="section-header-flex">
+                <h3>Makinat e Mia</h3>
+                <a href="{{ url_for('add_car') }}" class="btn-primary">+ Shto Mjet</a>
+            </div>
+            
+            <div class="profile-cars-grid">
+                {% for car in cars %}
+                <div class="profile-car-card">
+                    <div class="pcc-img">
+                        {% if car.main_image %}
+                            <img src="{{ url_for('uploaded_file', filename=car.main_image) }}" alt="{{ car.marka }}">
+                        {% else %}
+                            <div class="car-img-placeholder"><i class="fa-solid fa-car"></i></div>
+                        {% endif %}
+                        
+                        <div class="pcc-status">
+                            {% if car.status == 'confirmed' %}
+                                <span class="status status-confirmed">Publikuar</span>
+                            {% elif car.status == 'pending' %}
+                                <span class="status status-pending">Në Rishikim</span>
+                            {% else %}
+                                <span class="status status-declined">Refuzuar</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="pcc-info">
+                        <h4>{{ car.marka }} {{ car.modeli }}</h4>
+                        <p class="pcc-price">{{ "{:,.0f}".format(car.cmimi) }} {{ car.currency }}</p>
+                        <p class="pcc-date">Shtuar: {{ car.created_at[:10] }}</p>
+                        
+                        <div class="pcc-actions">
+                            {% if car.status == 'confirmed' %}
+                                <a href="{{ url_for('vehicle_details', car_id=car.id) }}" class="btn-pcc btn-pcc-view">Shiko</a>
+                            {% endif %}
+                            <form action="{{ url_for('delete_car', car_id=car.id) }}" method="POST" onsubmit="return confirm('Jeni i sigurt që doni të fshini këtë mjet?');" class="reset-margin">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn-pcc btn-pcc-delete">Fshij</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <div class="no-cars-prompt span-full">
+                    <i class="fa-solid fa-car-side"></i>
+                    <p>Nuk keni postuar asnjë mjet ende.</p>
+                    <a href="{{ url_for('add_car') }}" class="btn-primary">Posto Mjetin e Parë</a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+    </main>
+</div>
+{% endblock %}

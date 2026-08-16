@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Faqja nuk u gjet — Kerko Auto{% endblock %}
+{% block meta_description %}Faqja që kërkoni nuk ekziston. Kthehuni në Kerko Auto dhe gjeni makinën tuaj.{% endblock %}
+
+{% block content %}
+<main>
+    <div style="text-align:center; padding: 100px 20px;">
+        <h1 style="font-size: 80px; font-weight: 700; color: var(--primary-green); margin-bottom: 0; line-height: 1;">404</h1>
+        <h2 style="font-size: 24px; margin-bottom: 15px;">Faqja nuk u gjet</h2>
+        <p style="color: gray; font-size: 16px; margin-bottom: 40px;">Faqja që kërkoni nuk ekziston ose është fshirë.</p>
+        <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+            <a href="{{ url_for('home') }}" class="btn-primary">Kryefaqja</a>
+            <a href="{{ url_for('vehicles') }}" class="btn-primary" style="background: white; color: var(--primary-green); border: 2px solid var(--primary-green);">Shiko Makinat</a>
+        </div>
+    </div>
+</main>
+{% endblock %}

@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard - Kerko Auto{% endblock %}
+
+{% block content %}
+<div class="admin-page-wrapper">
+    
+    <div class="admin-header-banner">
+        <div class="admin-header-content">
+            <div class="admin-title-area">
+                <h2>Admin Dashboard</h2>
+                <span class="admin-greeting">Mirësevini, Admin 👋</span>
+            </div>
+            <a href="{{ url_for('logout') }}" class="btn-danger"><i class="fa-solid fa-right-from-bracket"></i> Dil</a>
+        </div>
+        
+        <div class="admin-nav-tabs">
+            <button class="tab-btn active" onclick="switchAdminTab('requests')"><i class="fa-solid fa-car-side"></i> Post Requests</button>
+            <button class="tab-btn" onclick="switchAdminTab('blogs')"><i class="fa-solid fa-pen-nib"></i> Blogs</button>
+            <button class="tab-btn" onclick="switchAdminTab('users')"><i class="fa-solid fa-users"></i> Users</button>
+            <button class="tab-btn" onclick="switchAdminTab('stats')"><i class="fa-solid fa-chart-simple"></i> Stats</button>
+        </div>
+    </div>
+
+    <main class="admin-main-area">
+        
+        <div id="requests-tab" class="admin-tab-content active-tab">
+            <div class="section-header-flex">
+                <h3>Kërkesat në Pritje</h3>
+                {% if pending|length > 0 %}
+                <form action="{{ url_for('admin_car_confirm_all') }}" method="POST" class="inline-form">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn-primary" onclick="return confirm('Konfirmoni të gjitha mjetet në pritje?')">
+                        <i class="fa-solid fa-check-double"></i> Konfirmo të Gjitha
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+            
+            <div class="table-responsive">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Mjeti</th>
+                            <th>Përdoruesi</th>
+                            <th>Data</th>
+                            <th>Veprimi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for car in pending %}
+                        <tr>
+                            <td><strong>{{ car.marka }} {{ car.modeli }} {% if car.viti %}({{ car.viti }}){% endif %}</strong></td>
+                            <td>{{ car.first_name }} {{ car.last_name }}</td>
+                            <td>{{ car.created_at[:10] }}</td>
+                            <td>
+                                <div class="action-buttons">
+                                    <form action="{{ url_for('admin_car_action', car_id=car.id, action='confirm') }}" method="POST" class="inline-form">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn-action btn-confirm">Konfirmo</button>
+                                    </form>
+                                    <button type="button" class="btn-action btn-edit" onclick="openEditModal('car', {{ car.id }}, '{{ car.marka }}', '{{ car.modeli }}', '{{ car.viti }}', '{{ car.cmimi }}')">Edito</button>
+                                    <form action="{{ url_for('admin_car_action', car_id=car.id, action='decline') }}" method="POST" class="inline-form">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn-action btn-decline">Refuzo</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="4" class="empty-table-msg">Nuk ka kërkesa në pritje.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="blogs-tab" class="admin-tab-content hidden-element">
+            <div class="section-header-flex">
+                <h3>Menaxho Blogun</h3>
+                <button class="btn-primary" onclick="openAddBlogModal()"><i class="fa-solid fa-plus"></i> Shto Blog</button>
+            </div>
+
+            <div class="table-responsive">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Titulli</th>
+                            <th>Kategoria</th>
+                            <th>Data</th>
+                            <th>Veprimi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for post in blogs %}
+                        <tr>
+                            <td><strong>{{ post.title[:40] }}{% if post.title|length > 40 %}...{% endif %}</strong></td>
+                            <td>{{ post.category }}</td>
+                            <td>{{ post.created_at[:10] }}</td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button type="button" class="btn-action btn-edit" onclick="openEditBlogModal({{ post.id }}, '{{ post.title | replace('\'', '\\\'') }}', '{{ post.category | replace('\'', '\\\'') }}', '{{ post.content | replace('\n', '\\n') | replace('\'', '\\\'') }}')">Edito</button>
+                                    <form action="{{ url_for('admin_blog_delete', blog_id=post.id) }}" method="POST" class="inline-form" onsubmit="return confirm('Fshij këtë artikull?')">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn-action btn-delete">Fshij</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="4" class="empty-table-msg">Nuk ka artikuj ende.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="users-tab" class="admin-tab-content hidden-element">
+            <h3 class="section-title">Databaza e Përdoruesve</h3>
+            <div class="table-responsive">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Emri Mbiemri</th>
+                            <th>Email</th>
+                            <th>Roli</th>
+                            <th>Veprimi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for u in users %}
+                        <tr>
+                            <td>
+                                <strong>{{ u.first_name }} {{ u.last_name }}</strong>
+                                {% if u.is_verified %}<i class="fa-solid fa-circle-check text-green" title="Verifikuar"></i>{% endif %}
+                            </td>
+                            <td>{{ u.email }}</td>
+                            <td>
+                                {% if u.is_admin %}
+                                    <span class="status status-confirmed">Admin</span>
+                                {% else %}
+                                    <span class="status status-pending">User</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <button type="button" class="btn-action btn-edit" onclick="openEditUserModal({{ u.id }}, '{{ u.first_name }}', '{{ u.last_name }}', '{{ u.email }}', {{ u.is_admin|lower }}, {{ u.is_verified|lower }})">Edito</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="stats-tab" class="admin-tab-content hidden-element">
+            <h3 class="section-title">Statistikat e Përgjithshme</h3>
+            <div class="stats-grid">
+                <div class="stat-card border-orange">
+                    <h4>Kërkesa në Pritje</h4>
+                    <p>{{ stats.pending }}</p>
+                </div>
+                <div class="stat-card border-dark">
+                    <h4>Blogje Totale</h4>
+                    <p>{{ stats.total_blogs }}</p>
+                </div>
+                <div class="stat-card border-green">
+                    <h4>Makina Aktive</h4>
+                    <p>{{ stats.total_cars }}</p>
+                </div>
+                <div class="stat-card border-blue">
+                    <h4>Përdorues</h4>
+                    <p>{{ stats.total_users }}</p>
+                </div>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<div id="editCarModal" class="modal-overlay">
+    <div class="modal-content admin-modal">
+        <span class="close-modal" onclick="document.getElementById('editCarModal').style.display='none'">&times;</span>
+        <h3 class="modal-title">Edito Mjetin</h3>
+        <form id="editCarForm" method="POST" class="admin-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="form-row-double">
+                <input type="text" name="marka" id="editCarMarka" placeholder="Marka" required>
+                <input type="text" name="modeli" id="editCarModeli" placeholder="Modeli" required>
+            </div>
+            <div class="form-row-double">
+                <input type="number" name="viti" id="editCarViti" placeholder="Viti">
+                <input type="number" name="cmimi" id="editCarCmimi" placeholder="Çmimi" required>
+            </div>
+            <button type="submit" class="modal-submit-btn">Ruaj Ndryshimet</button>
+        </form>
+    </div>
+</div>
+
+<div id="blogModal" class="modal-overlay">
+    <div class="modal-content admin-modal">
+        <span class="close-modal" onclick="document.getElementById('blogModal').style.display='none'">&times;</span>
+        <h3 class="modal-title" id="blogModalTitle">Shto Blog</h3>
+        <form id="blogForm" method="POST" class="admin-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="text" name="title" id="blogTitle" placeholder="Titulli" required>
+            <input type="text" name="category" id="blogCategory" placeholder="Kategoria">
+            <input type="text" name="image_filename" id="blogImage" placeholder="Emri i figurës (Vetëm për shtim)">
+            <textarea name="content" id="blogContent" rows="6" placeholder="Përmbajtja..." required></textarea>
+            <button type="submit" class="modal-submit-btn">Ruaj</button>
+        </form>
+    </div>
+</div>
+
+<div id="editUserModal" class="modal-overlay">
+    <div class="modal-content admin-modal">
+        <span class="close-modal" onclick="document.getElementById('editUserModal').style.display='none'">&times;</span>
+        <h3 class="modal-title">Edito Përdoruesin</h3>
+        <form id="editUserForm" method="POST" class="admin-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="form-row-double">
+                <input type="text" name="first_name" id="editUserFirst" placeholder="Emri" required>
+                <input type="text" name="last_name" id="editUserLast" placeholder="Mbiemri" required>
+            </div>
+            <input type="email" name="email" id="editUserEmail" placeholder="Email" required>
+            
+            <div class="checkbox-group">
+                <label><input type="checkbox" name="is_admin" id="editUserAdmin"> Është Administrator</label>
+            </div>
+            <div class="checkbox-group">
+                <label><input type="checkbox" name="is_verified" id="editUserVerified"> Shitës i Verifikuar</label>
+            </div>
+            
+            <button type="submit" class="modal-submit-btn">Ruaj Ndryshimet</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

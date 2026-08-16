@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Gabim serveri — Kerko Auto{% endblock %}
+{% block meta_description %}Ndodhi një gabim i papritur. Provoni përsëri ose kthehuni në Kerko Auto.{% endblock %}
+
+{% block content %}
+<main>
+    <div style="text-align:center; padding: 100px 20px;">
+        <h1 style="font-size: 80px; font-weight: 700; color: var(--primary-green); margin-bottom: 0; line-height: 1;">500</h1>
+        <h2 style="font-size: 24px; margin-bottom: 15px;">Gabim i papritur</h2>
+        <p style="color: gray; font-size: 16px; margin-bottom: 40px;">Diçka shkoi keq nga ana jonë. Provoni përsëri pas pak minutash.</p>
+        <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+            <a href="{{ url_for('home') }}" class="btn-primary">Kryefaqja</a>
+            <a href="{{ url_for('contact') }}" class="btn-primary" style="background: white; color: var(--primary-green); border: 2px solid var(--primary-green);">Na Kontaktoni</a>
+        </div>
+    </div>
+</main>
+{% endblock %}

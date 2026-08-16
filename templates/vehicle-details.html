@@ -1,0 +1,279 @@
+{% extends "base.html" %}
+{% block title %}{{ car.marka }} {{ car.modeli }}{% if car.viti %} {{ car.viti }}{% endif %}{% if car.location %} — {{ car.location }}{% endif %} | Kerko Auto{% endblock %}
+{% block meta_description %}{{ car.marka }} {{ car.modeli }}{% if car.viti %} {{ car.viti }}{% endif %} për shitje{% if car.location %} — {{ car.location }}{% endif %}. Çmimi: {{ "{:,.0f}".format(car.cmimi) }} {{ car.currency }}{% if car.karburant %}, {{ car.karburant }}{% endif %}{% if car.kambio %}, {{ car.kambio }}{% endif %}.{% endblock %}
+{% block og_type %}product{% endblock %}
+{% block og_title %}{{ car.marka }} {{ car.modeli }}{% if car.viti %} {{ car.viti }}{% endif %} — {{ "{:,.0f}".format(car.cmimi) }} {{ car.currency }} | Kerko Auto{% endblock %}
+{% block og_description %}{{ car.marka }} {{ car.modeli }}{% if car.viti %} {{ car.viti }}{% endif %} për shitje{% if car.location %} në {{ car.location }}{% endif %}. Çmimi: {{ "{:,.0f}".format(car.cmimi) }} {{ car.currency }}.{% endblock %}
+{% block og_image %}{% if images %}{{ request.host_url }}uploads/{{ images[0].filename }}{% else %}{{ request.host_url }}static/images/admin/og-default.jpg{% endif %}{% endblock %}
+{% block twitter_title %}{{ car.marka }} {{ car.modeli }}{% if car.viti %} {{ car.viti }}{% endif %} — {{ "{:,.0f}".format(car.cmimi) }} {{ car.currency }} | Kerko Auto{% endblock %}
+{% block twitter_image %}{% if images %}{{ request.host_url }}uploads/{{ images[0].filename }}{% else %}{{ request.host_url }}static/images/admin/og-default.jpg{% endif %}{% endblock %}
+
+{% block content %}
+<div class="container vd-container">
+
+    <a href="{{ url_for('vehicles') }}" class="vd-back-link">
+        <i class="fa-solid fa-arrow-left"></i> Kthehu te Makinat
+    </a>
+
+    <div class="vd-grid">
+
+        <!-- LEFT COLUMN: Gallery + Contact card (desktop) -->
+        <div class="vd-left-column">
+
+            <div class="vd-gallery-section">
+                {% if images %}
+                <div class="vd-main-img-wrap" id="main-img-wrap">
+                    <img id="main-img"
+                         src="{{ url_for('uploaded_file', filename=images[0].filename) }}"
+                         alt="{{ car.marka }} {{ car.modeli }}"
+                         onclick="openLightbox(currentIndex)">
+
+                    {% if images|length > 1 %}
+                    <button onclick="shiftMain(-1)" class="img-nav-btn img-nav-left"><i class="fa-solid fa-chevron-left"></i></button>
+                    <button onclick="shiftMain(1)"  class="img-nav-btn img-nav-right"><i class="fa-solid fa-chevron-right"></i></button>
+                    {% endif %}
+                </div>
+
+                <div class="vd-thumbs-wrapper">
+                    {% if images|length > 5 %}
+                    <button onclick="scrollThumbs(-1)" class="thumb-nav-btn thumb-nav-left"><i class="fa-solid fa-chevron-left"></i></button>
+                    {% endif %}
+
+                    <div class="vd-thumb-track" id="thumb-track">
+                        {% for img in images %}
+                        <img src="{{ url_for('uploaded_file', filename=img.filename) }}"
+                             onclick="setMain({{ loop.index0 }})"
+                             class="thumb-img {% if loop.first %}active{% endif %}"
+                             alt="{{ car.marka }} {{ car.modeli }} — foto {{ loop.index }}"
+                             loading="lazy"
+                             data-index="{{ loop.index0 }}">
+                        {% endfor %}
+                    </div>
+
+                    {% if images|length > 5 %}
+                    <button onclick="scrollThumbs(1)" class="thumb-nav-btn thumb-nav-right"><i class="fa-solid fa-chevron-right"></i></button>
+                    {% endif %}
+                </div>
+                {% else %}
+                <div class="vd-placeholder-img car-img-placeholder"><i class="fa-solid fa-car"></i></div>
+                {% endif %}
+            </div>
+
+            <!-- Contact card — visible on desktop only -->
+            <div class="vd-contact-card">
+                <h4 class="vd-section-title">Informacioni i Kontaktit</h4>
+
+                {% if car.user_id %}
+                    <a href="{{ url_for('seller_profile', seller_id=car.user_id) }}" class="vd-seller-link">
+                        <div class="vd-seller-avatar"><i class="fa-solid fa-user"></i></div>
+                        <span>{{ car.contact_name if car.contact_name else 'Shiko Profilin e Shitësit' }}</span>
+                        <i class="fa-solid fa-arrow-right-long link-arrow"></i>
+                    </a>
+                {% else %}
+                    <div class="vd-seller-link no-link">
+                        <div class="vd-seller-avatar"><i class="fa-solid fa-user"></i></div>
+                        <span>{{ car.contact_name or 'Përdorues i fshirë' }}</span>
+                    </div>
+                {% endif %}
+
+                {% if car.phone %}
+                <div class="vd-action-buttons">
+                    <a href="tel:{{ car.phone }}" class="vd-btn-phone">
+                        <i class="fa-solid fa-phone"></i> {{ car.phone }}
+                    </a>
+                    <a href="https://wa.me/{{ car.phone|replace(' ', '')|replace('+', '') }}" target="_blank" rel="noopener noreferrer" class="vd-btn-wa">
+                        <i class="fa-brands fa-whatsapp"></i> Shkruaj në WhatsApp
+                    </a>
+                </div>
+                {% else %}
+                <p class="vd-no-phone">Shitësi nuk ka lënë numër kontakti.</p>
+                {% endif %}
+
+                <div class="vd-meta-info">
+                    <p>Postuar më: {{ car.created_at[:10] }}</p>
+                    {% if session.is_admin %}
+                    <p><i class="fa-solid fa-eye"></i> Shfaqje: {{ car.views if car.views else 0 }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+
+        <!-- RIGHT COLUMN: Vehicle info + Contact section (mobile only) -->
+        <div class="vd-info-sidebar">
+            <div class="vd-sidebar-content">
+
+                <div class="vd-vehicle-details">
+                    <h2 class="vd-title">
+                        <a href="{{ url_for('vehicles', marka=car.marka) }}">{{ car.marka }}</a>
+                        {{ car.modeli }}
+                    </h2>
+                    <p class="vd-location">
+                        <i class="fa-solid fa-location-dot"></i>
+                        <a href="{{ url_for('vehicles', location=car.location) }}">{{ car.location or 'Shqipëri' }}</a>
+                    </p>
+
+                    <p class="car-price vd-price">{{ "{:,.0f}".format(car.cmimi) }} {{ car.currency }}</p>
+                    <hr class="vd-divider">
+
+                    <div class="vd-specs-grid">
+                        {% if car.viti %}
+                        <div class="vd-spec-box">
+                            <i class="fa-regular fa-calendar"></i>
+                            <p class="vd-spec-label">Viti</p>
+                            <p class="vd-spec-val">{{ car.viti }}</p>
+                        </div>
+                        {% endif %}
+                        {% if car.karburant %}
+                        <div class="vd-spec-box">
+                            <i class="fa-solid fa-gas-pump"></i>
+                            <p class="vd-spec-label">Karburanti</p>
+                            <p class="vd-spec-val">{{ car.karburant }}</p>
+                        </div>
+                        {% endif %}
+                        {% if car.km %}
+                        <div class="vd-spec-box">
+                            <i class="fa-solid fa-road"></i>
+                            <p class="vd-spec-label">Kilometra</p>
+                            <p class="vd-spec-val">{{ "{:,.0f}".format(car.km) }} km</p>
+                        </div>
+                        {% endif %}
+                        {% if car.kambio %}
+                        <div class="vd-spec-box">
+                            <i class="fa-solid fa-gears"></i>
+                            <p class="vd-spec-label">Kambio</p>
+                            <p class="vd-spec-val">{{ car.kambio }}</p>
+                        </div>
+                        {% endif %}
+                        {% if car.forma %}
+                        <div class="vd-spec-box vd-spec-forma">
+                            <i class="fa-solid fa-car-side"></i>
+                            <p class="vd-spec-label">Forma</p>
+                            <p class="vd-spec-val">{{ car.forma }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    {% if car.description %}
+                    <h4 class="vd-section-title">Përshkrimi</h4>
+                    <p class="vd-description">{{ car.description }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Contact section — visible on mobile only, sits below vehicle info -->
+                <div class="vd-contact-mobile">
+                    <hr class="vd-divider">
+                    <h4 class="vd-section-title">Informacioni i Kontaktit</h4>
+
+                    {% if car.user_id %}
+                        <a href="{{ url_for('seller_profile', seller_id=car.user_id) }}" class="vd-seller-link">
+                            <div class="vd-seller-avatar"><i class="fa-solid fa-user"></i></div>
+                            <span>{{ car.contact_name if car.contact_name else 'Shiko Profilin e Shitësit' }}</span>
+                            <i class="fa-solid fa-arrow-right-long link-arrow"></i>
+                        </a>
+                    {% else %}
+                        <div class="vd-seller-link no-link">
+                            <div class="vd-seller-avatar"><i class="fa-solid fa-user"></i></div>
+                            <span>{{ car.contact_name or 'Përdorues i fshirë' }}</span>
+                        </div>
+                    {% endif %}
+
+                    {% if car.phone %}
+                    <div class="vd-action-buttons">
+                        <a href="tel:{{ car.phone }}" class="vd-btn-phone">
+                            <i class="fa-solid fa-phone"></i> {{ car.phone }}
+                        </a>
+                        <a href="https://wa.me/{{ car.phone|replace(' ', '')|replace('+', '') }}" target="_blank" rel="noopener noreferrer" class="vd-btn-wa">
+                            <i class="fa-brands fa-whatsapp"></i> Shkruaj në WhatsApp
+                        </a>
+                    </div>
+                    {% else %}
+                    <p class="vd-no-phone">Shitësi nuk ka lënë numër kontakti.</p>
+                    {% endif %}
+
+                    <div class="vd-meta-info">
+                        <p>Postuar më: {{ car.created_at[:10] }}</p>
+                        {% if session.is_admin %}
+                        <p><i class="fa-solid fa-eye"></i> Shfaqje: {{ car.views if car.views else 0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    {% if similar %}
+    <h2 class="vd-similar-title">Makina të Ngjashme</h2>
+    <div class="vehicles-grid vd-similar-grid">
+        {% for s in similar %}
+        <a href="{{ url_for('vehicle_details', car_id=s.id) }}" class="car-listing-card">
+            <div class="car-listing-image-wrap">
+                {% if s.main_image %}
+                    <img src="{{ url_for('uploaded_file', filename=s.main_image) }}"
+                         alt="{{ s.marka }} {{ s.modeli }}{% if s.viti %} {{ s.viti }}{% endif %}"
+                         loading="lazy" width="400" height="280">
+                {% else %}
+                    <div class="car-img-placeholder"><i class="fa-solid fa-car"></i></div>
+                {% endif %}
+            </div>
+            <div class="car-listing-body">
+                <h4 class="car-listing-title">{{ s.marka }} {{ s.modeli }}</h4>
+                <div class="car-listing-location">
+                    <i class="fa-solid fa-location-dot"></i>
+                    {{ s.location if s.location else 'Shqipëri' }}
+                </div>
+                <div class="car-listing-divider"></div>
+                <div class="car-listing-specs">
+                    <div class="spec-item">
+                        <i class="fa-regular fa-calendar"></i>
+                        <div>
+                            <span class="spec-label">Viti</span>
+                            <span class="spec-value">{{ s.viti if s.viti else '—' }}</span>
+                        </div>
+                    </div>
+                    <div class="spec-item">
+                        <i class="fa-solid fa-gas-pump"></i>
+                        <div>
+                            <span class="spec-label">Karburanti</span>
+                            <span class="spec-value">{{ s.karburant if s.karburant else '—' }}</span>
+                        </div>
+                    </div>
+                    <div class="spec-item">
+                        <i class="fa-solid fa-gears"></i>
+                        <div>
+                            <span class="spec-label">Kambio</span>
+                            <span class="spec-value">{{ s.kambio if s.kambio else '—' }}</span>
+                        </div>
+                    </div>
+                    <div class="spec-item">
+                        <i class="fa-solid fa-road"></i>
+                        <div>
+                            <span class="spec-label">Km</span>
+                            <span class="spec-value">{{ "{:,.0f}".format(s.km) if s.km else '—' }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="car-listing-footer">
+                    <span class="car-listing-price">€{{ "{:,.0f}".format(s.cmimi) }}</span>
+                    <span class="btn-bli-tani">Bli tani</span>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+</div>
+
+<div id="lightbox" class="vd-lightbox">
+    <button onclick="closeLightbox()" class="lightbox-close">&times;</button>
+    <button onclick="lightboxShift(-1)" class="img-nav-btn img-nav-left lightbox-nav"><i class="fa-solid fa-chevron-left"></i></button>
+    <img id="lightbox-img" src="" alt="Zoomed Vehicle Image">
+    <button onclick="lightboxShift(1)"  class="img-nav-btn img-nav-right lightbox-nav"><i class="fa-solid fa-chevron-right"></i></button>
+</div>
+{% endblock %}
+
+{% block structured_data %}
+{% endblock %}

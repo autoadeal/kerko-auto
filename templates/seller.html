@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}{{ seller.first_name }} {{ seller.last_name }} - Profili në Kerko Auto{% endblock %}
+
+{% block content %}
+<div class="seller-profile-container">
+    
+    <div class="seller-hero-card">
+        <div class="seller-hero-avatar">
+            {% if seller.avatar %}
+                <img src="{% if 'http' in seller.avatar %}{{ seller.avatar }}{% else %}{{ url_for('uploaded_file', filename=seller.avatar) }}{% endif %}" alt="Avatar">
+            {% else %}
+                <div class="avatar-placeholder">{{ seller.first_name[0] }}{{ seller.last_name[0] if seller.last_name else '' }}</div>
+            {% endif %}
+        </div>
+        
+        <div class="seller-hero-info">
+            <h1 class="seller-name">
+                {{ seller.first_name }} {{ seller.last_name }}
+                {% if seller.is_verified %}
+                    <i class="fa-solid fa-circle-check verified-icon" title="Shitës i Verifikuar"></i>
+                {% endif %}
+            </h1>
+            
+            <div class="seller-meta">
+                <span title="Data e regjistrimit"><i class="fa-regular fa-calendar"></i> U bashkua: {{ seller.created_at[:4] }}</span>
+                {% if seller.city %}
+                    <span><i class="fa-solid fa-location-dot"></i> {{ seller.city }}</span>
+                {% endif %}
+                <span><i class="fa-solid fa-car"></i> {{ total_listings }} Mjete aktive</span>
+            </div>
+
+            <div class="seller-contacts">
+                {% if seller.phone %}
+                    <a href="tel:{{ seller.phone }}" class="btn-primary seller-phone-btn"><i class="fa-solid fa-phone"></i> {{ seller.phone }}</a>
+                {% endif %}
+                
+                <div class="seller-socials">
+                    {% if seller.instagram %}
+                        <a href="https://instagram.com/{{ seller.instagram.replace('@', '') }}" target="_blank" rel="noopener noreferrer" class="social-icon insta"><i class="fa-brands fa-instagram"></i></a>
+                    {% endif %}
+                    {% if seller.facebook %}
+                        <a href="{{ seller.facebook }}" target="_blank" rel="noopener noreferrer" class="social-icon fb"><i class="fa-brands fa-facebook"></i></a>
+                    {% endif %}
+                    {% if seller.tiktok %}
+                        <a href="https://tiktok.com/@{{ seller.tiktok.replace('@', '') }}" target="_blank" rel="noopener noreferrer" class="social-icon tiktok"><i class="fa-brands fa-tiktok"></i></a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="seller-cars-section">
+        <h3 class="section-title">Mjetet e publikuara nga {{ seller.first_name }}</h3>
+        <div class="grid-5">
+            {% for car in cars %}
+                <a href="{{ url_for('vehicle_details', car_id=car.id) }}" class="car-listing-card">
+                    <div class="car-listing-image-wrap">
+                        {% if car.main_image %}
+                            <img src="{{ url_for('uploaded_file', filename=car.main_image) }}" alt="{{ car.marka }}">
+                        {% else %}
+                            <div class="car-img-placeholder"><i class="fa-solid fa-car"></i></div>
+                        {% endif %}
+                    </div>
+                    <div class="car-listing-body">
+                        <h4 class="car-listing-title">{{ car.marka }} {{ car.modeli }}</h4>
+                        <p class="car-listing-location"><i class="fa-solid fa-location-dot"></i> {{ car.location }}</p>
+                        <div class="car-listing-divider"></div>
+                        <div class="car-listing-specs">
+                            <div class="spec-item"><i class="fa-solid fa-calendar-days"></i><div><span class="spec-label">VITI</span><span class="spec-value">{{ car.viti }}</span></div></div>
+                            <div class="spec-item"><i class="fa-solid fa-gauge"></i><div><span class="spec-label">KM</span><span class="spec-value">{{ "{:,.0f}".format(car.km) }}</span></div></div>
+                            <div class="spec-item"><i class="fa-solid fa-gas-pump"></i><div><span class="spec-label">KARB.</span><span class="spec-value">{{ car.karburant }}</span></div></div>
+                            <div class="spec-item"><i class="fa-solid fa-gear"></i><div><span class="spec-label">KAMBIO</span><span class="spec-value">{{ car.kambio }}</span></div></div>
+                        </div>
+                        <div class="car-listing-footer">
+                            <span class="car-listing-price">{{ "{:,.0f}".format(car.cmimi) }} {{ car.currency }}</span>
+                            <span class="btn-bli-tani">Shiko</span>
+                        </div>
+                    </div>
+                </a>
+            {% else %}
+                <div class="no-results span-full">
+                    <i class="fa-solid fa-car-tunnel"></i>
+                    <h3>Nuk ka mjete aktive</h3>
+                    <p>Ky përdorues nuk ka asnjë mjet të publikuar për momentin.</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}
