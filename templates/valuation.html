@@ -35,7 +35,7 @@
                     <i class="fa-solid fa-car"></i>
                     <div>
                         <h3>Të Dhënat e Mjetit</h3>
-                        <p>Marka, modeli, viti dhe motori</p>
+                        <p>Marka, modeli dhe viti</p>
                     </div>
                 </div>
                 <div class="val-grid">
@@ -47,20 +47,14 @@
                     </div>
                     <div class="val-field">
                         <label>Modeli *</label>
-                        <select id="val-modeli" required onchange="valPopulateEngines(); valPopulateColors()">
+                        <select id="val-modeli" required onchange="updateValGenerazione(); valPopulateColors()">
                             <option value="">Zgjidh Modelin</option>
                         </select>
                     </div>
                     <div class="val-field">
                         <label>Viti *</label>
-                        <input type="number" id="val-viti" min="1990" max="2026" placeholder="p.sh. 2015" required oninput="valPopulateEngines()">
-                    </div>
-                    <div class="val-field">
-                        <label>Lloji i Motorit *</label>
-                        <select id="val-engine" required>
-                            <option value="">Zgjidh motorin</option>
-                        </select>
-                        <p class="val-hint" id="val-engine-hint">Fillimisht zgjidh markën, modelin dhe vitin.</p>
+                        <input type="number" id="val-viti" min="1990" max="2026" placeholder="p.sh. 2015" required oninput="updateValGenerazione()">
+                        <p id="val-gen-label" class="gen-label-text"></p>
                     </div>
                 </div>
             </div>

@@ -1298,26 +1298,6 @@ const brandTier = {
     "Nissan": "tier3", "Mini": "tier3", "Smart": "tier4", "BYD": "tier3",
 };
 
-// Engine displacement scoring (rough cc extraction)
-function getEngineScore(engineLabel, year) {
-    if (!engineLabel) return 0;
-    const hp = parseInt((engineLabel.match(/\((\d+)hp\)/) || [])[1] || 0);
-    const older = year < 2010;
-    if (!hp) return 0;
-    if (older) {
-        // older cars: lower hp = less deduction (big engines cost more to run)
-        if (hp > 200) return -3;
-        if (hp > 150) return -1;
-        return 1;
-    } else {
-        // newer cars: more hp = more value
-        if (hp >= 300) return 5;
-        if (hp >= 220) return 3;
-        if (hp >= 150) return 1;
-        return 0;
-    }
-}
-
 // Exterior color multiplier
 function getExtColorScore(val) {
     const colorMap = {
@@ -1382,8 +1362,6 @@ function valPopulateModels() {
     const brand = document.getElementById('val-marka').value;
     const modelSel = document.getElementById('val-modeli');
     modelSel.innerHTML = '<option value="">Zgjidh Modelin</option>';
-    document.getElementById('val-engine').innerHTML = '<option value="">Zgjidh motorin</option>';
-    document.getElementById('val-engine-hint').style.display = 'block';
     if (brand && carData[brand]) {
         carData[brand].forEach(m => {
             const o = document.createElement('option');
@@ -1391,31 +1369,45 @@ function valPopulateModels() {
             modelSel.appendChild(o);
         });
     }
+    updateValGenerazione();
     valPopulateColors();
 }
 
-function valPopulateEngines() {
-    const brand = document.getElementById('val-marka').value;
-    const model = document.getElementById('val-modeli').value;
-    const year = parseInt(document.getElementById('val-viti').value);
-    const engSel = document.getElementById('val-engine');
-    const hint = document.getElementById('val-engine-hint');
-    engSel.innerHTML = '<option value="">Zgjidh motorin</option>';
+function updateValGenerazione() {
+    const brand = document.getElementById('val-marka')?.value;
+    const model = document.getElementById('val-modeli')?.value;
+    const year = parseInt(document.getElementById('val-viti')?.value);
+    const label = document.getElementById('val-gen-label');
+    if (!label) return '';
 
-    if (brand && model && engineData[brand] && engineData[brand][model]) {
-        hint.style.display = 'none';
-        engineData[brand][model].forEach(e => {
-            const o = document.createElement('option');
-            o.value = e; o.textContent = e;
-            engSel.appendChild(o);
-        });
-    } else if (brand && model) {
-        hint.style.display = 'block';
-        hint.textContent = 'Motoret për këtë model nuk janë shtuar akoma.';
-    } else {
-        hint.style.display = 'block';
-        hint.textContent = 'Zgjidh markën, modelin dhe vitin fillimisht.';
+    label.textContent = '';
+    label.style.color = '';
+    if (!brand || !model || !year || year < 1990 || year > 2026) return '';
+
+    const generations = generationData[brand] && generationData[brand][model];
+    if (!generations) {
+        label.textContent = 'Nuk u gjet gjenerata për këtë model.';
+        label.style.color = '#e67e22';
+        return '';
     }
+
+    const match = generations.find(generation => {
+        const years = generation.match(/\d{4}/g);
+        if (!years || years.length < 2) return false;
+        const from = parseInt(years[years.length - 2]);
+        const to = parseInt(years[years.length - 1]);
+        return year >= from && year <= to;
+    });
+
+    if (match) {
+        label.textContent = '✓ Gjenerata: ' + match;
+        label.style.color = '#27ae60';
+        return match;
+    }
+
+    label.textContent = 'Nuk u gjet gjenerata për vitin ' + year + '.';
+    label.style.color = '#e67e22';
+    return '';
 }
 
 function valPopulateColors() {
@@ -1481,8 +1473,7 @@ function valValidateStep(step) {
         const marka = document.getElementById('val-marka').value;
         const modeli = document.getElementById('val-modeli').value;
         const viti = document.getElementById('val-viti').value;
-        const engine = document.getElementById('val-engine').value;
-        if (!marka || !modeli || !viti || !engine) {
+        if (!marka || !modeli || !viti) {
             alert('Ju lutem plotëso të gjitha fushat e kërkuara.');
             return false;
         }
@@ -1540,21 +1531,7 @@ async function calculateValuation() {
     const brand  = document.getElementById('val-marka').value;
     const model  = document.getElementById('val-modeli').value;
     const year   = parseInt(document.getElementById('val-viti').value);
-    const engine = document.getElementById('val-engine').value;
-
-    // Derive generation from year (reuse generationData from main.js)
-    let generazione = '';
-    if (generationData[brand] && generationData[brand][model]) {
-        const gens = generationData[brand][model];
-        for (const gen of gens) {
-            const match = gen.match(/(\d{4})[–\-](\d{4})/);
-            if (match) {
-                const gy1 = parseInt(match[1]);
-                const gy2 = parseInt(match[2]);
-                if (year >= gy1 && year <= gy2) { generazione = gen; break; }
-            }
-        }
-    }
+    const generazione = updateValGenerazione();
 
     // Show loading state
     document.getElementById('valBtnSubmit').innerHTML =
@@ -1603,13 +1580,6 @@ async function calculateValuation() {
     let totalModifier = 0;
     const factors = [];
 
-    // Engine score
-    const engScore = getEngineScore(engine, year);
-    if (engScore !== 0) {
-        totalModifier += engScore;
-        factors.push({ label: `Motor: ${engine}`, val: engScore > 0 ? `+${engScore}%` : `${engScore}%`, positive: engScore > 0 });
-    }
-
     // Exterior color
     const extColor = document.getElementById('val-ext-color').value;
     const extScore = getExtColorScore(extColor);
@@ -1634,6 +1604,7 @@ async function calculateValuation() {
         optionScore += parseFloat(inp.dataset.weight || 0);
     });
     if (optionScore > 0) {
+        optionScore = Math.min(optionScore, 20);
         totalModifier += optionScore;
         factors.push({ label: 'Opsionet', val: `+${optionScore.toFixed(1)}%`, positive: true });
     }
@@ -1648,16 +1619,23 @@ async function calculateValuation() {
         factors.push({ label: 'Vetëm Pjesë', val: '-75%', positive: false });
     }
 
-    // Kilometers vs fetched average km (we use 120k as a general proxy since DB avg isn't fetched)
+    // Kilometers against the average of the same matched market listings.
     const km = parseInt(document.getElementById('val-km').value) || 100000;
-    const avgKm = 120000;
-    const kmDiff = avgKm - km;
-    if (kmDiff > 0) {
-        const kmBonus = Math.floor(kmDiff / 10000) * 2.5;
-        if (kmBonus > 0) { totalModifier += kmBonus; factors.push({ label: `Km nën mesatare (${km.toLocaleString()} km)`, val: `+${kmBonus.toFixed(1)}%`, positive: true }); }
-    } else if (kmDiff < 0) {
-        const kmPenalty = Math.floor(Math.abs(kmDiff) / 10000) * 2.5;
-        if (kmPenalty > 0) { totalModifier -= kmPenalty; factors.push({ label: `Km mbi mesatare (${km.toLocaleString()} km)`, val: `-${kmPenalty.toFixed(1)}%`, positive: false }); }
+    const avgKm = priceData.avg_km;
+    if (Number.isFinite(avgKm)) {
+        const kmDiff = avgKm - km;
+        const kmSteps = Math.floor(Math.abs(kmDiff) / 10000);
+        const kmModifier = kmSteps * 2;
+        if (kmModifier > 0) {
+            const label = `${km.toLocaleString()} km kundrejt mesatares ${avgKm.toLocaleString()} km`;
+            if (kmDiff > 0) {
+                totalModifier += kmModifier;
+                factors.push({ label: `Km nën mesatare (${label})`, val: `+${kmModifier}%`, positive: true });
+            } else {
+                totalModifier -= kmModifier;
+                factors.push({ label: `Km mbi mesatare (${label})`, val: `-${kmModifier}%`, positive: false });
+            }
+        }
     }
 
     // Major accident
@@ -1666,8 +1644,7 @@ async function calculateValuation() {
     if (getToggleVal('frame-damage') === 'yes') { totalModifier -= 50; factors.push({ label: 'Dëmtim Shasisë', val: '-50%', positive: false }); }
     // Flood
     const flood = getToggleVal('flood-damage');
-    if (flood === 'yes') { totalModifier -= 15; factors.push({ label: 'Përmbytje', val: '-15%', positive: false }); }
-    else { totalModifier += 2.5; factors.push({ label: 'Pa Përmbytje', val: '+2.5%', positive: true }); }
+    if (flood === 'yes') { totalModifier -= 30; factors.push({ label: 'Përmbytje', val: '-30%', positive: false }); }
     // Smoked
     const smoked = getToggleVal('smoked');
     if (smoked === 'yes') { totalModifier -= 1.5; factors.push({ label: 'Duhanpirje', val: '-1.5%', positive: false }); }
@@ -1733,7 +1710,7 @@ async function calculateValuation() {
     const finalHigh = Math.max(300, Math.round(baseHigh * (1 + modPct)));
 
     // Populate result
-    document.getElementById('val-result-car-label').textContent = `${brand} ${model} ${year} — ${engine}`;
+    document.getElementById('val-result-car-label').textContent = `${brand} ${model} ${year}`;
     document.getElementById('val-price-low').textContent  = '€' + finalLow.toLocaleString('de-DE');
     document.getElementById('val-price-high').textContent = '€' + finalHigh.toLocaleString('de-DE');
     document.getElementById('val-price-avg').textContent  = '€' + finalAvg.toLocaleString('de-DE');

@@ -601,7 +601,7 @@ def valuation_prices():
 
     if generazione:
         rows = query_db(
-            """SELECT cmimi FROM cars
+            """SELECT cmimi, km FROM cars
                WHERE status='confirmed'
                AND marka=? AND modeli=? AND generazione=?
                AND cmimi IS NOT NULL AND cmimi > 0
@@ -610,7 +610,7 @@ def valuation_prices():
         )
     else:
         rows = query_db(
-            """SELECT cmimi FROM cars
+            """SELECT cmimi, km FROM cars
                WHERE status='confirmed'
                AND marka=? AND modeli=?
                AND cmimi IS NOT NULL AND cmimi > 0
@@ -619,6 +619,7 @@ def valuation_prices():
         )
 
     prices = sorted([r["cmimi"] for r in rows])
+    mileages = [r["km"] for r in rows if r["km"] is not None and r["km"] >= 0]
 
     if not prices:
         return {"found": False}
@@ -642,6 +643,7 @@ def valuation_prices():
         "low":     low,
         "high":    high,
         "avg":     avg,
+        "avg_km":  round(sum(mileages) / len(mileages)) if mileages else None,
         "warning": count <= 15
     }
 
