@@ -1497,6 +1497,7 @@ function valValidateStep(step) {
 
 // Toggle groups
 document.addEventListener('DOMContentLoaded', function () {
+    if (!document.getElementById('valuationForm')) return;
     valInitBrands();
     updateValProgress();
 
