@@ -4,10 +4,14 @@
 {% block content %}
 <div class="container add-car-container">
     <div class="form-card">
-        <h2 class="form-title">Shto Mjetin Tënd</h2>
-        <p class="form-subtitle">Plotëso të dhënat. Postimi do të rishikohet nga admini para publikimit.</p>
+        <h2 class="form-title">{% if edit_mode %}Edito Mjetin{% else %}Shto Mjetin Tënd{% endif %}</h2>
+        <p class="form-subtitle">
+            {% if edit_mode %}Përditëso të gjitha të dhënat dhe rendit fotot. Fotoja e parë shfaqet si foto kryesore.
+            {% else %}Plotëso të dhënat. Postimi do të rishikohet nga admini para publikimit.{% endif %}
+        </p>
 
         <!-- Valuation Banner -->
+        {% if not edit_mode %}
         <a href="{{ url_for('valuation') }}" class="val-promo-banner">
             <div class="val-promo-left">
                 <div class="val-promo-icon">
@@ -22,15 +26,16 @@
                 <i class="fa-solid fa-calculator"></i> Vlerëso Tani
             </div>
         </a>
+        {% endif %}
 
-        <form action="{{ url_for('add_car') }}" method="POST" enctype="multipart/form-data" id="carForm">
+        <form action="{% if edit_mode %}{{ url_for('admin_car_edit', car_id=car.id) }}{% else %}{{ url_for('add_car') }}{% endif %}" method="POST" enctype="multipart/form-data" id="carForm" data-edit-mode="{{ 'true' if edit_mode else 'false' }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <h4 class="form-section-header">Të Dhënat Kryesore</h4>
             
             <div class="form-grid">
                 <div>
                     <label>Marka *</label>
-                    <select name="marka" id="filterMarka" class="form-control" required 
+                    <select name="marka" id="filterMarka" class="form-control" required data-selected="{{ car.marka if car else '' }}"
                             onchange="populateModels('filterMarka','addModeli'); updateGenerazione();">
                         <option value="">Zgjidh Markën</option>
                     </select>
@@ -38,7 +43,7 @@
 
                 <div>
                     <label>Modeli *</label>
-                    <select name="modeli" id="addModeli" class="form-control" required 
+                    <select name="modeli" id="addModeli" class="form-control" required data-selected="{{ car.modeli if car else '' }}"
                             onchange="updateGenerazione()">
                         <option value="">Zgjidh Modelin</option>
                     </select>
@@ -47,21 +52,21 @@
                 <div>
                     <label>Viti *</label>
                     <input type="number" name="viti" id="addViti" class="form-control" required
-                           min="1990" max="2026" placeholder="p.sh. 2015"
+                           min="1990" max="2026" placeholder="p.sh. 2015" value="{{ car.viti if car and car.viti is not none else '' }}"
                            oninput="updateGenerazione()">
-                    <input type="hidden" name="generazione" id="addGenerazione">
-                    <p id="genLabel" class="gen-label-text"></p>
+                    <input type="hidden" name="generazione" id="addGenerazione" value="{{ car.generazione if car and car.generazione else '' }}">
+                    <p id="genLabel" class="gen-label-text">{% if car and car.generazione %}✓ Gjenerata: {{ car.generazione }}{% endif %}</p>
                 </div>
 
                 <div>
                     <label>Karburanti *</label>
                     <select name="karburant" class="form-control" required>
                         <option value="">Zgjidh</option>
-                        <option value="Naftë">Naftë</option>
-                        <option value="Benzinë">Benzinë</option>
-                        <option value="Gaz (LPG)">Gaz (LPG)</option>
-                        <option value="Elektrike">Elektrike</option>
-                        <option value="Hibrid">Hibrid</option>
+                        <option value="Naftë" {% if car and car.karburant == 'Naftë' %}selected{% endif %}>Naftë</option>
+                        <option value="Benzinë" {% if car and car.karburant == 'Benzinë' %}selected{% endif %}>Benzinë</option>
+                        <option value="Gaz (LPG)" {% if car and car.karburant == 'Gaz (LPG)' %}selected{% endif %}>Gaz (LPG)</option>
+                        <option value="Elektrike" {% if car and car.karburant == 'Elektrike' %}selected{% endif %}>Elektrike</option>
+                        <option value="Hibrid" {% if car and car.karburant == 'Hibrid' %}selected{% endif %}>Hibrid</option>
                     </select>
                 </div>
 
@@ -69,8 +74,8 @@
                     <label>Kambio *</label>
                     <select name="kambio" class="form-control" required>
                         <option value="">Zgjidh</option>
-                        <option value="Manuale">Manuale</option>
-                        <option value="Automatike">Automatike</option>
+                        <option value="Manuale" {% if car and car.kambio == 'Manuale' %}selected{% endif %}>Manuale</option>
+                        <option value="Automatike" {% if car and car.kambio == 'Automatike' %}selected{% endif %}>Automatike</option>
                     </select>
                 </div>
 
@@ -78,17 +83,17 @@
                     <label>Forma *</label>
                     <select name="forma" class="form-control" required>
                         <option value="">Zgjidh</option>
-                        <option value="Hatchback">Hatchback</option>
-                        <option value="Sedan">Sedan</option>
-                        <option value="Wagon">Wagon</option>
-                        <option value="SUV">SUV</option>
-                        <option value="MPV">MPV</option>
+                        <option value="Hatchback" {% if car and car.forma == 'Hatchback' %}selected{% endif %}>Hatchback</option>
+                        <option value="Sedan" {% if car and car.forma == 'Sedan' %}selected{% endif %}>Sedan</option>
+                        <option value="Wagon" {% if car and car.forma == 'Wagon' %}selected{% endif %}>Wagon</option>
+                        <option value="SUV" {% if car and car.forma == 'SUV' %}selected{% endif %}>SUV</option>
+                        <option value="MPV" {% if car and car.forma == 'MPV' %}selected{% endif %}>MPV</option>
                     </select>
                 </div>
 
                 <div>
                     <label>Kilometra *</label>
-                    <input type="number" name="km" placeholder="p.sh. 150000" class="form-control" required>
+                    <input type="number" name="km" placeholder="p.sh. 150000" class="form-control" required value="{{ car.km if car and car.km is not none else '' }}">
                 </div>
 
                 <div>
@@ -96,7 +101,7 @@
                     <select name="location" class="form-control" required>
                         <option value="">Zgjidh Qytetin</option>
                         {% for city in ['Tirane', 'Fier', 'Durres', 'Elbasan', 'Korce', 'Shkoder', 'Vlore', 'Berat', 'Lezhe', 'Diber', 'Kukes', 'Gjirokaster', 'Lushnje', 'Pogradec', 'Kavaje', 'Sarande'] %}
-                        <option value="{{ city }}">{{ city }}</option>
+                        <option value="{{ city }}" {% if car and car.location == city %}selected{% endif %}>{{ city }}</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -104,17 +109,17 @@
                 <div class="span-full">
                     <label>Çmimi *</label>
                     <div class="price-input-group">
-                        <input type="number" name="price" id="price" class="form-control price-field" placeholder="Shkruaj Çmimin" required min="101">
+                        <input type="number" name="price" id="price" class="form-control price-field" placeholder="Shkruaj Çmimin" required min="101" value="{{ car.cmimi if car and car.cmimi is not none else '' }}">
                         <select name="currency" class="form-control currency-field">
-                            <option value="EUR">EUR</option>
-                            <option value="ALL">ALL</option>
+                            <option value="EUR" {% if not car or car.currency == 'EUR' %}selected{% endif %}>EUR</option>
+                            <option value="ALL" {% if car and car.currency == 'ALL' %}selected{% endif %}>ALL</option>
                         </select>
                     </div>
                 </div>
 
                 <div class="span-full">
                     <label>Përshkrimi *</label>
-                    <textarea name="description" rows="4" class="form-control textarea-fixed" placeholder="Përshkruaj mjetin tënd..." required></textarea>
+                    <textarea name="description" rows="4" class="form-control textarea-fixed" placeholder="Përshkruaj mjetin tënd..." required>{{ car.description if car and car.description else '' }}</textarea>
                 </div>
 
                 <div class="span-full">
@@ -122,8 +127,14 @@
                     <div class="upload-dropzone">
                         <input type="file" name="photos" id="photos_input" multiple accept="image/*" class="hidden-input">
                         <label for="photos_input" id="photos_label" class="btn-primary upload-btn">SHTO FOTO</label>
-                        <p class="upload-hint">Mund të shtoni deri në 6 foto. Klikoni 'X' për të hequr.</p>
-                        <div id="photo-preview" class="preview-container"></div>
+                        <p class="upload-hint">Mund të shtoni deri në 6 foto. Tërhiqni fotot për t'i renditur; fotoja e parë është fotoja kryesore.</p>
+                        <div id="photo-preview" class="preview-container">
+                            {% for image in images %}
+                            <div class="photo-preview-item" data-existing-id="{{ image.id }}" draggable="true">
+                                <img src="{{ url_for('uploaded_file', filename=image.filename) }}" alt="Foto {{ loop.index }}">
+                            </div>
+                            {% endfor %}
+                        </div>
                         <p id="photo-count-msg" class="error-msg"></p>
                     </div>
                 </div>
@@ -132,17 +143,17 @@
                     <div class="form-grid no-margin">
                         <div>
                             <label>Emri *</label>
-                            <input type="text" name="contact_name" class="form-control" placeholder="Emri juaj" required>
+                            <input type="text" name="contact_name" class="form-control" placeholder="Emri juaj" required value="{{ car.contact_name if car and car.contact_name else '' }}">
                         </div>
                         <div>
                             <label>Numri i Kontaktit *</label>
-                            <input type="tel" name="phone" class="form-control" placeholder="06X XX XX XXX" required>
+                            <input type="tel" name="phone" class="form-control" placeholder="06X XX XX XXX" required value="{{ car.phone if car and car.phone else '' }}">
                         </div>
                     </div>
                 </div>
             </div>
 
-            <button type="submit" class="btn-primary btn-submit-full">Posto Mjetin</button>
+            <button type="submit" class="btn-primary btn-submit-full" data-default-label="{% if edit_mode %}Ruaj Ndryshimet{% else %}Posto Mjetin{% endif %}">{% if edit_mode %}Ruaj Ndryshimet{% else %}Posto Mjetin{% endif %}</button>
         </form>
     </div>
 </div>

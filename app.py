@@ -151,7 +151,8 @@ def init_db():
         CREATE TABLE IF NOT EXISTS car_images (
             id         INTEGER PRIMARY KEY AUTOINCREMENT,
             car_id     INTEGER NOT NULL REFERENCES cars(id) ON DELETE CASCADE,
-            filename   TEXT    NOT NULL
+            filename   TEXT    NOT NULL,
+            sort_order INTEGER NOT NULL DEFAULT 0
         );
 
         CREATE TABLE IF NOT EXISTS blogs (
@@ -167,6 +168,23 @@ def init_db():
         WHERE NOT EXISTS (SELECT 1 FROM cars WHERE cars.id = car_images.car_id);
 
     """)
+    # Existing installations pre-date sortable vehicle photos. Preserve their
+    # original insertion order while enabling reordering for every listing.
+    image_columns = {row[1] for row in db.execute("PRAGMA table_info(car_images)")}
+    if "sort_order" not in image_columns:
+        db.execute("ALTER TABLE car_images ADD COLUMN sort_order INTEGER NOT NULL DEFAULT 0")
+        db.execute(
+            """UPDATE car_images
+               SET sort_order = (
+                   SELECT COUNT(*) FROM car_images AS earlier
+                   WHERE earlier.car_id = car_images.car_id
+                     AND earlier.id < car_images.id
+               )"""
+        )
+    db.execute(
+        "CREATE INDEX IF NOT EXISTS idx_car_images_car_sort "
+        "ON car_images(car_id, sort_order, id)"
+    )
     db.commit()
     db.close()
     print("Database schema ready.")
@@ -205,7 +223,9 @@ def remove_upload(filename):
 
 def delete_car_and_uploads(car_id):
     """Delete a car and its uploaded files after the database deletion succeeds."""
-    images = query_db("SELECT filename FROM car_images WHERE car_id=?", (car_id,))
+    images = query_db(
+        "SELECT filename FROM car_images WHERE car_id=? ORDER BY sort_order, id", (car_id,)
+    )
     execute_db("DELETE FROM cars WHERE id=?", (car_id,))
     for image in images:
         remove_upload(image["filename"])
@@ -403,9 +423,11 @@ def home():
     most_wanted = query_db(
         """SELECT cars.*, ci.filename AS main_image
            FROM cars
-           LEFT JOIN (SELECT car_id, MIN(id) AS min_id FROM car_images GROUP BY car_id) first
-               ON cars.id = first.car_id
-           LEFT JOIN car_images ci ON ci.id = first.min_id
+           LEFT JOIN car_images ci ON ci.id = (
+               SELECT id FROM car_images
+               WHERE car_id=cars.id
+               ORDER BY sort_order, id LIMIT 1
+           )
            WHERE cars.status='confirmed' ORDER BY views DESC LIMIT 10"""
     )
     blogs = query_db(
@@ -430,9 +452,11 @@ def vehicles():
 
     sql    = """SELECT cars.*, ci.filename AS main_image
                FROM cars
-               LEFT JOIN (SELECT car_id, MIN(id) AS min_id FROM car_images GROUP BY car_id) first
-                   ON cars.id = first.car_id
-               LEFT JOIN car_images ci ON ci.id = first.min_id
+               LEFT JOIN car_images ci ON ci.id = (
+                   SELECT id FROM car_images
+                   WHERE car_id=cars.id
+                   ORDER BY sort_order, id LIMIT 1
+               )
                WHERE cars.status='confirmed'"""
     params = []
 
@@ -499,13 +523,17 @@ def vehicle_details(car_id):
     if not car:
         abort(404)
     execute_db("UPDATE cars SET views=views+1 WHERE id=?", (car_id,))
-    images  = query_db("SELECT * FROM car_images WHERE car_id=?", (car_id,))
+    images  = query_db(
+        "SELECT * FROM car_images WHERE car_id=? ORDER BY sort_order, id", (car_id,)
+    )
     similar = query_db(
         """SELECT cars.*, ci.filename AS main_image
         FROM cars
-        LEFT JOIN (SELECT car_id, MIN(id) AS min_id FROM car_images GROUP BY car_id) first
-            ON cars.id = first.car_id
-        LEFT JOIN car_images ci ON ci.id = first.min_id
+        LEFT JOIN car_images ci ON ci.id = (
+            SELECT id FROM car_images
+            WHERE car_id=cars.id
+            ORDER BY sort_order, id LIMIT 1
+        )
         WHERE cars.status='confirmed' AND cars.marka=? AND cars.id!=?
         ORDER BY cars.created_at DESC LIMIT 5""",
         (car["marka"], car_id)
@@ -546,14 +574,17 @@ def add_car():
             )
         )
 
-        for f in valid_files:
+        for sort_order, f in enumerate(valid_files):
             fname = save_upload(f)
-            execute_db("INSERT INTO car_images (car_id,filename) VALUES (?,?)", (car_id, fname))
+            execute_db(
+                "INSERT INTO car_images (car_id,filename,sort_order) VALUES (?,?,?)",
+                (car_id, fname, sort_order),
+            )
 
         flash("Mjeti u postua me sukses! Do të rishikohet nga admini.", "success")
         return redirect(url_for("profile"))
 
-    return render_template("add-car.html")
+    return render_template("add-car.html", edit_mode=False, car=None, images=[])
 
 @app.route("/vlereso")
 def valuation():
@@ -695,12 +726,11 @@ def profile():
     cars_sql = """
         SELECT cars.*, ci.filename AS main_image
         FROM cars
-        LEFT JOIN (
-            SELECT car_id, MIN(id) AS min_id 
-            FROM car_images 
-            GROUP BY car_id
-        ) first ON cars.id = first.car_id
-        LEFT JOIN car_images ci ON ci.id = first.min_id
+        LEFT JOIN car_images ci ON ci.id = (
+            SELECT id FROM car_images
+            WHERE car_id=cars.id
+            ORDER BY sort_order, id LIMIT 1
+        )
         WHERE cars.user_id=? 
         ORDER BY cars.created_at DESC
     """
@@ -717,12 +747,11 @@ def seller_profile(seller_id):
     cars_sql = """
         SELECT cars.*, ci.filename AS main_image
         FROM cars
-        LEFT JOIN (
-            SELECT car_id, MIN(id) AS min_id 
-            FROM car_images 
-            GROUP BY car_id
-        ) first ON cars.id = first.car_id
-        LEFT JOIN car_images ci ON ci.id = first.min_id
+        LEFT JOIN car_images ci ON ci.id = (
+            SELECT id FROM car_images
+            WHERE car_id=cars.id
+            ORDER BY sort_order, id LIMIT 1
+        )
         WHERE cars.user_id=? AND cars.status='confirmed' 
         ORDER BY cars.created_at DESC
     """
@@ -773,13 +802,96 @@ def admin_car_confirm_all():
     flash("Të gjitha kërkesat u konfirmuan.", "success")
     return redirect(url_for("admin"))
 
-@app.route("/admin/car/edit/<int:car_id>", methods=["POST"])
+@app.route("/admin/car/edit/<int:car_id>", methods=["GET", "POST"])
 @admin_required
 def admin_car_edit(car_id):
-    execute_db(
-        "UPDATE cars SET marka=?, modeli=?, viti=?, cmimi=? WHERE id=?",
-        (request.form.get("marka"), request.form.get("modeli"), request.form.get("viti"), request.form.get("cmimi"), car_id)
+    car = query_db("SELECT * FROM cars WHERE id=?", (car_id,), one=True)
+    if not car:
+        abort(404)
+
+    images = query_db(
+        "SELECT * FROM car_images WHERE car_id=? ORDER BY sort_order, id", (car_id,)
     )
+    if request.method == "GET":
+        return render_template("add-car.html", edit_mode=True, car=car, images=images)
+
+    required_fields = ("marka", "modeli", "viti", "karburant", "kambio", "forma",
+                       "km", "price", "location", "description", "contact_name", "phone")
+    if any(not request.form.get(field, "").strip() for field in required_fields):
+        flash("Ju lutem plotësoni të gjitha fushat e kërkuara.", "danger")
+        return redirect(url_for("admin_car_edit", car_id=car_id))
+
+    uploads = request.files.getlist("photos")
+    valid_uploads = [f for f in uploads if f and f.filename and allowed_file(f.filename)]
+    if len(valid_uploads) != len([f for f in uploads if f and f.filename]):
+        flash("Fotot duhet të jenë JPG, PNG ose WEBP.", "danger")
+        return redirect(url_for("admin_car_edit", car_id=car_id))
+
+    image_by_id = {str(image["id"]): image for image in images}
+    requested_order = request.form.getlist("photo_order")
+    if not requested_order:
+        # A non-JavaScript fallback keeps all existing photos and adds new ones last.
+        requested_order = [f"existing:{image['id']}" for image in images]
+        requested_order += [f"new:{index}" for index in range(len(valid_uploads))]
+
+    if not requested_order or len(requested_order) > MAX_PHOTOS or len(set(requested_order)) != len(requested_order):
+        flash("Një mjet duhet të ketë nga 1 deri në 6 foto.", "danger")
+        return redirect(url_for("admin_car_edit", car_id=car_id))
+
+    expected_new_tokens = {f"new:{index}" for index in range(len(valid_uploads))}
+    received_new_tokens = {token for token in requested_order if token.startswith("new:")}
+    requested_existing_ids = [token.removeprefix("existing:") for token in requested_order if token.startswith("existing:")]
+    if (
+        received_new_tokens != expected_new_tokens
+        or any(image_id not in image_by_id for image_id in requested_existing_ids)
+        or len(requested_existing_ids) + len(received_new_tokens) != len(requested_order)
+    ):
+        abort(400)
+
+    execute_db(
+        """UPDATE cars
+           SET marka=?, modeli=?, viti=?, karburant=?, kambio=?, forma=?, km=?, cmimi=?,
+               currency=?, location=?, description=?, contact_name=?, phone=?, generazione=?
+           WHERE id=?""",
+        (
+            request.form.get("marka").strip(),
+            request.form.get("modeli").strip(),
+            request.form.get("viti").strip(),
+            request.form.get("karburant").strip(),
+            request.form.get("kambio").strip(),
+            request.form.get("forma").strip(),
+            request.form.get("km").strip(),
+            request.form.get("price").strip(),
+            request.form.get("currency", "EUR").strip() or "EUR",
+            request.form.get("location").strip(),
+            request.form.get("description").strip(),
+            request.form.get("contact_name").strip(),
+            request.form.get("phone").strip(),
+            request.form.get("generazione", "").strip() or None,
+            car_id,
+        ),
+    )
+
+    upload_by_token = {f"new:{index}": upload for index, upload in enumerate(valid_uploads)}
+    retained_existing_ids = set(requested_existing_ids)
+    for sort_order, token in enumerate(requested_order):
+        if token.startswith("existing:"):
+            execute_db(
+                "UPDATE car_images SET sort_order=? WHERE id=? AND car_id=?",
+                (sort_order, int(token.removeprefix("existing:")), car_id),
+            )
+        else:
+            filename = save_upload(upload_by_token[token])
+            execute_db(
+                "INSERT INTO car_images (car_id,filename,sort_order) VALUES (?,?,?)",
+                (car_id, filename, sort_order),
+            )
+
+    removed_images = [image for image_id, image in image_by_id.items() if image_id not in retained_existing_ids]
+    for image in removed_images:
+        execute_db("DELETE FROM car_images WHERE id=? AND car_id=?", (image["id"], car_id))
+        remove_upload(image["filename"])
+
     flash("Mjeti u përditësua.", "success")
     return redirect(url_for("admin"))
 

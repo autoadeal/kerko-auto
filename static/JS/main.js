@@ -756,14 +756,109 @@ function copyPostLink(btn) {
 
 const fileInput = document.getElementById('photos_input');
 const previewContainer = document.getElementById('photo-preview');
-let persistentFiles = [];
 const MAX_PHOTOS = 6;
+let photoItems = [];
+let draggedPhotoIndex = null;
+
+if (previewContainer) {
+    photoItems = Array.from(previewContainer.querySelectorAll('[data-existing-id]')).map(item => ({
+        type: 'existing',
+        id: item.dataset.existingId,
+        previewUrl: item.querySelector('img').src,
+    }));
+}
+
+function renderPhotoPreviews() {
+    if (!previewContainer) return;
+    previewContainer.innerHTML = '';
+
+    photoItems.forEach((item, index) => {
+        const div = document.createElement('div');
+        div.className = 'photo-preview-item';
+        div.draggable = true;
+        div.dataset.index = index;
+
+        const img = document.createElement('img');
+        img.src = item.previewUrl;
+        img.alt = `Foto ${index + 1}`;
+
+        const orderBadge = document.createElement('span');
+        orderBadge.className = 'photo-order-badge';
+        orderBadge.textContent = index + 1;
+        orderBadge.title = index === 0 ? 'Fotoja kryesore' : `Foto ${index + 1}`;
+
+        const moveEarlierBtn = document.createElement('button');
+        moveEarlierBtn.type = 'button';
+        moveEarlierBtn.className = 'photo-move-btn photo-move-earlier';
+        moveEarlierBtn.innerHTML = '&larr;';
+        moveEarlierBtn.setAttribute('aria-label', `Lëviz foton ${index + 1} më herët`);
+        moveEarlierBtn.disabled = index === 0;
+        moveEarlierBtn.addEventListener('click', () => {
+            if (index === 0) return;
+            [photoItems[index - 1], photoItems[index]] = [photoItems[index], photoItems[index - 1]];
+            renderPhotoPreviews();
+        });
+
+        const moveLaterBtn = document.createElement('button');
+        moveLaterBtn.type = 'button';
+        moveLaterBtn.className = 'photo-move-btn photo-move-later';
+        moveLaterBtn.innerHTML = '&rarr;';
+        moveLaterBtn.setAttribute('aria-label', `Lëviz foton ${index + 1} më vonë`);
+        moveLaterBtn.disabled = index === photoItems.length - 1;
+        moveLaterBtn.addEventListener('click', () => {
+            if (index === photoItems.length - 1) return;
+            [photoItems[index], photoItems[index + 1]] = [photoItems[index + 1], photoItems[index]];
+            renderPhotoPreviews();
+        });
+
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.innerHTML = '&times;';
+        removeBtn.className = 'photo-remove-btn';
+        removeBtn.setAttribute('aria-label', `Hiq foton ${index + 1}`);
+        removeBtn.addEventListener('click', () => {
+            const [removed] = photoItems.splice(index, 1);
+            if (removed?.type === 'new' && removed.previewUrl.startsWith('blob:')) {
+                URL.revokeObjectURL(removed.previewUrl);
+            }
+            renderPhotoPreviews();
+        });
+
+        div.addEventListener('dragstart', () => {
+            draggedPhotoIndex = index;
+            div.classList.add('is-dragging');
+        });
+        div.addEventListener('dragend', () => {
+            draggedPhotoIndex = null;
+            div.classList.remove('is-dragging');
+        });
+        div.addEventListener('dragover', event => {
+            event.preventDefault();
+            div.classList.add('is-drag-over');
+        });
+        div.addEventListener('dragleave', () => div.classList.remove('is-drag-over'));
+        div.addEventListener('drop', event => {
+            event.preventDefault();
+            div.classList.remove('is-drag-over');
+            if (draggedPhotoIndex === null || draggedPhotoIndex === index) return;
+            const [moved] = photoItems.splice(draggedPhotoIndex, 1);
+            photoItems.splice(index, 0, moved);
+            renderPhotoPreviews();
+        });
+
+        div.append(img, orderBadge, moveEarlierBtn, moveLaterBtn, removeBtn);
+        previewContainer.appendChild(div);
+    });
+
+    refreshCountMsg();
+}
 
 function refreshCountMsg() {
     const countMsg = document.getElementById('photo-count-msg');
     const photosLabel = document.getElementById('photos_label');
+    if (!countMsg || !photosLabel || !fileInput) return;
 
-    if (persistentFiles.length >= MAX_PHOTOS) {
+    if (photoItems.length >= MAX_PHOTOS) {
         countMsg.textContent = 'Keni arritur limitin e 6 fotove.';
         countMsg.style.display = 'block';
         photosLabel.classList.add('upload-disabled');
@@ -778,38 +873,12 @@ function refreshCountMsg() {
 if (fileInput) {
     fileInput.addEventListener('change', function () {
         Array.from(fileInput.files).forEach(file => {
-            if (persistentFiles.length >= MAX_PHOTOS) return;
-            if (persistentFiles.some(f => f.name === file.name && f.size === file.size)) return;
-
-            persistentFiles.push(file);
-            const reader = new FileReader();
-
-            reader.onload = e => {
-                const div = document.createElement('div');
-                div.className = 'photo-preview-item';
-
-                const img = document.createElement('img');
-                img.src = e.target.result;
-
-                const removeBtn = document.createElement('span');
-                removeBtn.innerHTML = '&times;';
-                removeBtn.className = 'photo-remove-btn';
-
-                removeBtn.onclick = () => {
-                    persistentFiles = persistentFiles.filter(f => f !== file);
-                    div.remove();
-                    refreshCountMsg();
-                };
-
-                div.appendChild(img);
-                div.appendChild(removeBtn);
-                previewContainer.appendChild(div);
-                refreshCountMsg();
-            };
-            reader.readAsDataURL(file);
+            if (photoItems.length >= MAX_PHOTOS) return;
+            if (photoItems.some(item => item.type === 'new' && item.file.name === file.name && item.file.size === file.size)) return;
+            photoItems.push({ type: 'new', file, previewUrl: URL.createObjectURL(file) });
         });
         fileInput.value = '';
-        refreshCountMsg();
+        renderPhotoPreviews();
     });
 }
 
@@ -819,7 +888,7 @@ if (carForm) {
     carForm.addEventListener('submit', function (e) {
         e.preventDefault();
 
-        if (persistentFiles.length === 0) {
+        if (photoItems.length === 0) {
             const countMsg = document.getElementById('photo-count-msg');
             countMsg.textContent = 'Ju lutem shtoni te pakten nje foto.';
             countMsg.style.display = 'block';
@@ -831,12 +900,19 @@ if (carForm) {
         const submitBtn = carForm.querySelector('button[type="submit"]');
         if (submitBtn) {
             submitBtn.disabled = true;
-            submitBtn.textContent = 'Duke postuar...';
+            submitBtn.textContent = 'Duke ruajtur...';
         }
 
         const fd = new FormData(carForm);
-        fd.delete('photos_input');
-        persistentFiles.forEach(f => fd.append('photos', f));
+        fd.delete('photos');
+        photoItems.forEach((item, index) => {
+            if (item.type === 'existing') {
+                fd.append('photo_order', `existing:${item.id}`);
+            } else {
+                fd.append('photo_order', `new:${photoItems.slice(0, index + 1).filter(i => i.type === 'new').length - 1}`);
+            }
+        });
+        photoItems.filter(item => item.type === 'new').forEach(item => fd.append('photos', item.file));
 
         fetch(carForm.action, {
             method: 'POST',
@@ -854,12 +930,26 @@ if (carForm) {
         }).catch(() => {
             if (submitBtn) {
                 submitBtn.disabled = false;
-                submitBtn.textContent = 'Posto Mjetin';
+                submitBtn.textContent = submitBtn.dataset.defaultLabel || 'Ruaj';
             }
             alert('Ndodhi nje gabim. Provoni perseri.');
         });
     });
 }
+
+document.addEventListener('DOMContentLoaded', function () {
+    const markaEl = document.getElementById('filterMarka');
+    const modeliEl = document.getElementById('addModeli');
+    if (!markaEl || !modeliEl) return;
+
+    const selectedBrand = markaEl.dataset.selected || '';
+    const selectedModel = modeliEl.dataset.selected || '';
+    if (selectedBrand) {
+        markaEl.value = selectedBrand;
+        populateModels('filterMarka', 'addModeli', selectedModel);
+    }
+    renderPhotoPreviews();
+});
 
 // --- Add-Car: Generation auto-detect from year input ---
 function updateGenerazione() {
@@ -943,15 +1033,6 @@ function switchAdminTab(tabId) {
     setTimeout(() => targetTab.classList.add('active-tab'), 10);
    
     event.currentTarget.classList.add('active');
-}
-
-function openEditModal(type, id, marka, modeli, viti, cmimi) {
-    document.getElementById('editCarModal').style.display = 'flex';
-    document.getElementById('editCarForm').action = '/admin/car/edit/' + id;
-    document.getElementById('editCarMarka').value = marka;
-    document.getElementById('editCarModeli').value = modeli;
-    document.getElementById('editCarViti').value = viti !== 'None' ? viti : '';
-    document.getElementById('editCarCmimi').value = cmimi !== 'None' ? cmimi : '';
 }
 
 function openAddBlogModal() {

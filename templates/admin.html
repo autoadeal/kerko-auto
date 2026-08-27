@@ -58,7 +58,7 @@
                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <button type="submit" class="btn-action btn-confirm">Konfirmo</button>
                                     </form>
-                                    <button type="button" class="btn-action btn-edit" onclick="openEditModal('car', {{ car.id }}, '{{ car.marka }}', '{{ car.modeli }}', '{{ car.viti }}', '{{ car.cmimi }}')">Edito</button>
+                                    <a class="btn-action btn-edit" href="{{ url_for('admin_car_edit', car_id=car.id) }}">Edito</a>
                                     <form action="{{ url_for('admin_car_action', car_id=car.id, action='decline') }}" method="POST" class="inline-form">
                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <button type="submit" class="btn-action btn-decline">Refuzo</button>
@@ -174,25 +174,6 @@
         </div>
 
     </main>
-</div>
-
-<div id="editCarModal" class="modal-overlay">
-    <div class="modal-content admin-modal">
-        <span class="close-modal" onclick="document.getElementById('editCarModal').style.display='none'">&times;</span>
-        <h3 class="modal-title">Edito Mjetin</h3>
-        <form id="editCarForm" method="POST" class="admin-form">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <div class="form-row-double">
-                <input type="text" name="marka" id="editCarMarka" placeholder="Marka" required>
-                <input type="text" name="modeli" id="editCarModeli" placeholder="Modeli" required>
-            </div>
-            <div class="form-row-double">
-                <input type="number" name="viti" id="editCarViti" placeholder="Viti">
-                <input type="number" name="cmimi" id="editCarCmimi" placeholder="Çmimi" required>
-            </div>
-            <button type="submit" class="modal-submit-btn">Ruaj Ndryshimet</button>
-        </form>
-    </div>
 </div>
 
 <div id="blogModal" class="modal-overlay">
