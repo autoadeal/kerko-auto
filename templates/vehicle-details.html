@@ -92,7 +92,14 @@
                 <div class="vd-meta-info">
                     <p>Postuar më: {{ car.created_at[:10] }}</p>
                     {% if session.is_admin %}
-                    <p><i class="fa-solid fa-eye"></i> Shfaqje: {{ car.views if car.views else 0 }}</p>
+                    <div class="vd-admin-controls">
+                        <span><i class="fa-solid fa-eye"></i> Shfaqje: {{ car.views if car.views else 0 }}</span>
+                        <a href="{{ url_for('admin_car_edit', car_id=car.id) }}" class="vd-admin-edit"><i class="fa-solid fa-pen"></i> Edito</a>
+                        <form action="{{ url_for('admin_car_action', car_id=car.id, action='delete') }}" method="POST" class="inline-form" onsubmit="return confirm('Fshij këtë postim përgjithmonë?')">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="vd-admin-delete"><i class="fa-solid fa-trash"></i> Fshij</button>
+                        </form>
+                    </div>
                     {% endif %}
                 </div>
             </div>
@@ -194,7 +201,14 @@
                     <div class="vd-meta-info">
                         <p>Postuar më: {{ car.created_at[:10] }}</p>
                         {% if session.is_admin %}
-                        <p><i class="fa-solid fa-eye"></i> Shfaqje: {{ car.views if car.views else 0 }}</p>
+                        <div class="vd-admin-controls">
+                            <span><i class="fa-solid fa-eye"></i> Shfaqje: {{ car.views if car.views else 0 }}</span>
+                            <a href="{{ url_for('admin_car_edit', car_id=car.id) }}" class="vd-admin-edit"><i class="fa-solid fa-pen"></i> Edito</a>
+                            <form action="{{ url_for('admin_car_action', car_id=car.id, action='delete') }}" method="POST" class="inline-form" onsubmit="return confirm('Fshij këtë postim përgjithmonë?')">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="vd-admin-delete"><i class="fa-solid fa-trash"></i> Fshij</button>
+                            </form>
+                        </div>
                         {% endif %}
                     </div>
                 </div>

@@ -10,6 +10,7 @@ from urllib.parse import urlencode
 import requests
 from werkzeug.middleware.proxy_fix import ProxyFix
 from whitenoise import WhiteNoise
+from PIL import Image, ImageOps, UnidentifiedImageError
 
 
 # APP CONFIG
@@ -213,20 +214,120 @@ def save_upload(file):
     file.save(os.path.join(UPLOAD_FOLDER, filename))
     return filename
 
+def valid_vehicle_upload(file):
+    """Return whether an upload is a readable image, not just a renamed file."""
+    try:
+        file.stream.seek(0)
+        with Image.open(file.stream) as image:
+            image.verify()
+        return True
+    except (UnidentifiedImageError, OSError, ValueError):
+        return False
+    finally:
+        file.stream.seek(0)
+
+def crop_vehicle_image(image):
+    """Center-crop a vehicle image to the site's horizontal 4:3 format."""
+    image = ImageOps.exif_transpose(image)
+    width, height = image.size
+    if width < 1 or height < 1:
+        raise ValueError("Image has no usable dimensions")
+
+    crop_width = min(width, (height * 4) // 3)
+    crop_height = (crop_width * 3) // 4
+    left = (width - crop_width) // 2
+    top = (height - crop_height) // 2
+    return image.crop((left, top, left + crop_width, top + crop_height))
+
+def as_rgb(image):
+    """Flatten transparent images onto white before saving as JPEG."""
+    if image.mode == "RGBA":
+        background = Image.new("RGB", image.size, "white")
+        background.paste(image, mask=image.getchannel("A"))
+        return background
+    return image.convert("RGB") if image.mode != "RGB" else image
+
+def save_vehicle_upload(file):
+    """Crop a newly uploaded vehicle photo and store it as an optimized JPEG."""
+    filename = f"{uuid.uuid4().hex}.jpg"
+    path = os.path.join(UPLOAD_FOLDER, filename)
+    try:
+        file.stream.seek(0)
+        with Image.open(file.stream) as source:
+            image = as_rgb(crop_vehicle_image(source))
+            image.save(path, "JPEG", quality=90, optimize=True)
+    except (UnidentifiedImageError, OSError, ValueError):
+        if os.path.isfile(path):
+            os.remove(path)
+        raise ValueError("Invalid vehicle image")
+    finally:
+        file.stream.seek(0)
+    return filename
+
+def normalize_existing_vehicle_images():
+    """Bring previously uploaded vehicle photos into the same 4:3 format once."""
+    db = sqlite3.connect(DATABASE, timeout=30)
+    try:
+        filenames = [row[0] for row in db.execute("SELECT filename FROM car_images")]
+    finally:
+        db.close()
+
+    for filename in filenames:
+        path = os.path.join(UPLOAD_FOLDER, os.path.basename(filename))
+        if not os.path.isfile(path):
+            continue
+
+        temp_path = None
+        try:
+            with Image.open(path) as source:
+                corrected = ImageOps.exif_transpose(source)
+                if corrected.width * 3 == corrected.height * 4:
+                    continue
+                cropped = crop_vehicle_image(source)
+                extension = os.path.splitext(path)[1].lower()
+                temp_path = f"{path}.{uuid.uuid4().hex}.tmp"
+                if extension == ".png":
+                    cropped.save(temp_path, "PNG", optimize=True)
+                elif extension == ".webp":
+                    as_rgb(cropped).save(temp_path, "WEBP", quality=90, method=6)
+                else:
+                    as_rgb(cropped).save(temp_path, "JPEG", quality=90, optimize=True)
+                os.replace(temp_path, path)
+        except (UnidentifiedImageError, OSError, ValueError):
+            if temp_path and os.path.isfile(temp_path):
+                os.remove(temp_path)
+
+# Existing listings remain on the mounted volume, so normalize them as the app
+# starts. Already-cropped images are skipped on later starts.
+normalize_existing_vehicle_images()
+
 def remove_upload(filename):
     """Remove one generated upload without allowing paths outside the upload folder."""
     if not filename:
-        return
+        return False
     path = os.path.join(UPLOAD_FOLDER, os.path.basename(filename))
     if os.path.isfile(path):
-        os.remove(path)
+        try:
+            os.remove(path)
+        except OSError:
+            # The database row is already gone; a temporary Windows file lock
+            # must not turn a successful post deletion into a server error.
+            return False
+    return True
 
 def delete_car_and_uploads(car_id):
-    """Delete a car and its uploaded files after the database deletion succeeds."""
-    images = query_db(
+    """Delete a car, even when an older SQLite schema lacks cascade support."""
+    db = get_db()
+    images = db.execute(
         "SELECT filename FROM car_images WHERE car_id=? ORDER BY sort_order, id", (car_id,)
-    )
-    execute_db("DELETE FROM cars WHERE id=?", (car_id,))
+    ).fetchall()
+    try:
+        db.execute("DELETE FROM car_images WHERE car_id=?", (car_id,))
+        db.execute("DELETE FROM cars WHERE id=?", (car_id,))
+        db.commit()
+    except sqlite3.Error:
+        db.rollback()
+        raise
     for image in images:
         remove_upload(image["filename"])
 
@@ -545,9 +646,16 @@ def vehicle_details(car_id):
 def add_car():
     if request.method == "POST":
         files = request.files.getlist("photos")[:MAX_PHOTOS]
-        valid_files = [f for f in files if f and f.filename and allowed_file(f.filename)]
+        submitted_files = [f for f in files if f and f.filename]
+        valid_files = [
+            f for f in submitted_files
+            if allowed_file(f.filename) and valid_vehicle_upload(f)
+        ]
         if not valid_files:
             flash("Ju lutem shtoni të paktën një foto JPG, PNG ose WEBP.", "danger")
+            return redirect(url_for("add_car"))
+        if len(valid_files) != len(submitted_files):
+            flash("Fotot duhet të jenë JPG, PNG ose WEBP të vlefshme.", "danger")
             return redirect(url_for("add_car"))
 
         car_id = execute_db(
@@ -574,12 +682,17 @@ def add_car():
             )
         )
 
-        for sort_order, f in enumerate(valid_files):
-            fname = save_upload(f)
-            execute_db(
-                "INSERT INTO car_images (car_id,filename,sort_order) VALUES (?,?,?)",
-                (car_id, fname, sort_order),
-            )
+        try:
+            for sort_order, f in enumerate(valid_files):
+                fname = save_vehicle_upload(f)
+                execute_db(
+                    "INSERT INTO car_images (car_id,filename,sort_order) VALUES (?,?,?)",
+                    (car_id, fname, sort_order),
+                )
+        except ValueError:
+            delete_car_and_uploads(car_id)
+            flash("Një nga fotot nuk mund të përpunohej. Ju lutem provojeni përsëri.", "danger")
+            return redirect(url_for("add_car"))
 
         flash("Mjeti u postua me sukses! Do të rishikohet nga admini.", "success")
         return redirect(url_for("profile"))
@@ -773,6 +886,11 @@ def admin():
            FROM cars LEFT JOIN users ON cars.user_id=users.id
            WHERE cars.status='pending' ORDER BY cars.created_at DESC"""
     )
+    all_cars = query_db(
+        """SELECT cars.*, users.first_name, users.last_name
+           FROM cars LEFT JOIN users ON cars.user_id=users.id
+           ORDER BY cars.created_at DESC"""
+    )
     blogs = query_db("SELECT * FROM blogs ORDER BY created_at DESC")
     users = query_db("SELECT * FROM users ORDER BY created_at DESC")
     stats = {
@@ -781,11 +899,17 @@ def admin():
         "total_cars":  query_db("SELECT COUNT(*) FROM cars WHERE status='confirmed'",   one=True)[0],
         "total_users": query_db("SELECT COUNT(*) FROM users",                           one=True)[0],
     }
-    return render_template("admin.html", pending=pending, blogs=blogs, users=users, stats=stats)
+    return render_template(
+        "admin.html", pending=pending, all_cars=all_cars, blogs=blogs, users=users, stats=stats
+    )
 
 @app.route("/admin/car/<int:car_id>/<action>", methods=["POST"])
 @admin_required
 def admin_car_action(car_id, action):
+    if action not in {"confirm", "decline", "delete"}:
+        abort(404)
+    if not query_db("SELECT id FROM cars WHERE id=?", (car_id,), one=True):
+        abort(404)
     if action == "confirm":
         execute_db("UPDATE cars SET status='confirmed' WHERE id=?", (car_id,))
         flash("Mjeti u konfirmua.", "success")
@@ -824,9 +948,13 @@ def admin_car_edit(car_id):
         return redirect(url_for("admin_car_edit", car_id=car_id))
 
     uploads = request.files.getlist("photos")
-    valid_uploads = [f for f in uploads if f and f.filename and allowed_file(f.filename)]
-    if len(valid_uploads) != len([f for f in uploads if f and f.filename]):
-        flash("Fotot duhet të jenë JPG, PNG ose WEBP.", "danger")
+    submitted_uploads = [f for f in uploads if f and f.filename]
+    valid_uploads = [
+        f for f in submitted_uploads
+        if allowed_file(f.filename) and valid_vehicle_upload(f)
+    ]
+    if len(valid_uploads) != len(submitted_uploads):
+        flash("Fotot duhet të jenë JPG, PNG ose WEBP të vlefshme.", "danger")
         return redirect(url_for("admin_car_edit", car_id=car_id))
 
     image_by_id = {str(image["id"]): image for image in images}
@@ -883,7 +1011,7 @@ def admin_car_edit(car_id):
                 (sort_order, int(token.removeprefix("existing:")), car_id),
             )
         else:
-            filename = save_upload(upload_by_token[token])
+            filename = save_vehicle_upload(upload_by_token[token])
             execute_db(
                 "INSERT INTO car_images (car_id,filename,sort_order) VALUES (?,?,?)",
                 (car_id, filename, sort_order),

@@ -781,35 +781,12 @@ function renderPhotoPreviews() {
         const img = document.createElement('img');
         img.src = item.previewUrl;
         img.alt = `Foto ${index + 1}`;
+        img.draggable = false;
 
         const orderBadge = document.createElement('span');
         orderBadge.className = 'photo-order-badge';
         orderBadge.textContent = index + 1;
         orderBadge.title = index === 0 ? 'Fotoja kryesore' : `Foto ${index + 1}`;
-
-        const moveEarlierBtn = document.createElement('button');
-        moveEarlierBtn.type = 'button';
-        moveEarlierBtn.className = 'photo-move-btn photo-move-earlier';
-        moveEarlierBtn.innerHTML = '&larr;';
-        moveEarlierBtn.setAttribute('aria-label', `Lëviz foton ${index + 1} më herët`);
-        moveEarlierBtn.disabled = index === 0;
-        moveEarlierBtn.addEventListener('click', () => {
-            if (index === 0) return;
-            [photoItems[index - 1], photoItems[index]] = [photoItems[index], photoItems[index - 1]];
-            renderPhotoPreviews();
-        });
-
-        const moveLaterBtn = document.createElement('button');
-        moveLaterBtn.type = 'button';
-        moveLaterBtn.className = 'photo-move-btn photo-move-later';
-        moveLaterBtn.innerHTML = '&rarr;';
-        moveLaterBtn.setAttribute('aria-label', `Lëviz foton ${index + 1} më vonë`);
-        moveLaterBtn.disabled = index === photoItems.length - 1;
-        moveLaterBtn.addEventListener('click', () => {
-            if (index === photoItems.length - 1) return;
-            [photoItems[index], photoItems[index + 1]] = [photoItems[index + 1], photoItems[index]];
-            renderPhotoPreviews();
-        });
 
         const removeBtn = document.createElement('button');
         removeBtn.type = 'button';
@@ -846,7 +823,72 @@ function renderPhotoPreviews() {
             renderPhotoPreviews();
         });
 
-        div.append(img, orderBadge, moveEarlierBtn, moveLaterBtn, removeBtn);
+        // HTML5 drag and drop is not dependable on phones. A short hold starts
+        // touch dragging, then releasing over another photo moves it there.
+        let longPressTimer = null;
+        let touchPointerId = null;
+        let touchDragging = false;
+        let touchStart = null;
+
+        const clearTouchDrag = () => {
+            window.clearTimeout(longPressTimer);
+            longPressTimer = null;
+            touchPointerId = null;
+            touchStart = null;
+        };
+
+        const finishTouchDrag = event => {
+            window.clearTimeout(longPressTimer);
+            if (!touchDragging) {
+                clearTouchDrag();
+                return;
+            }
+
+            event.preventDefault();
+            const target = document.elementFromPoint(event.clientX, event.clientY)?.closest('.photo-preview-item');
+            const targetIndex = target ? Number(target.dataset.index) : NaN;
+            if (div.hasPointerCapture?.(event.pointerId)) {
+                div.releasePointerCapture(event.pointerId);
+            }
+            touchDragging = false;
+            clearTouchDrag();
+            div.classList.remove('is-touch-dragging');
+
+            if (!Number.isNaN(targetIndex) && targetIndex !== index) {
+                const [moved] = photoItems.splice(index, 1);
+                photoItems.splice(targetIndex, 0, moved);
+                renderPhotoPreviews();
+            }
+        };
+
+        div.addEventListener('pointerdown', event => {
+            if (event.pointerType !== 'touch' || event.target.closest('button')) return;
+            touchPointerId = event.pointerId;
+            touchStart = { x: event.clientX, y: event.clientY };
+            longPressTimer = window.setTimeout(() => {
+                if (touchPointerId !== event.pointerId) return;
+                touchDragging = true;
+                div.classList.add('is-touch-dragging');
+                div.setPointerCapture?.(event.pointerId);
+            }, 180);
+        });
+        div.addEventListener('pointermove', event => {
+            if (event.pointerType !== 'touch' || touchPointerId !== event.pointerId) return;
+            if (!touchDragging && touchStart && Math.hypot(event.clientX - touchStart.x, event.clientY - touchStart.y) > 8) {
+                clearTouchDrag();
+                return;
+            }
+            if (touchDragging) event.preventDefault();
+        });
+        div.addEventListener('pointerup', finishTouchDrag);
+        div.addEventListener('pointercancel', () => {
+            window.clearTimeout(longPressTimer);
+            touchDragging = false;
+            clearTouchDrag();
+            div.classList.remove('is-touch-dragging');
+        });
+
+        div.append(img, orderBadge, removeBtn);
         previewContainer.appendChild(div);
     });
 

@@ -15,6 +15,7 @@
         
         <div class="admin-nav-tabs">
             <button class="tab-btn active" onclick="switchAdminTab('requests')"><i class="fa-solid fa-car-side"></i> Post Requests</button>
+            <button class="tab-btn" onclick="switchAdminTab('posts')"><i class="fa-solid fa-list"></i> Postimet</button>
             <button class="tab-btn" onclick="switchAdminTab('blogs')"><i class="fa-solid fa-pen-nib"></i> Blogs</button>
             <button class="tab-btn" onclick="switchAdminTab('users')"><i class="fa-solid fa-users"></i> Users</button>
             <button class="tab-btn" onclick="switchAdminTab('stats')"><i class="fa-solid fa-chart-simple"></i> Stats</button>
@@ -68,6 +69,61 @@
                         </tr>
                         {% else %}
                         <tr><td colspan="4" class="empty-table-msg">Nuk ka kërkesa në pritje.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="posts-tab" class="admin-tab-content hidden-element">
+            <div class="section-header-flex">
+                <h3>Të Gjitha Postimet</h3>
+            </div>
+
+            <div class="table-responsive">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Mjeti</th>
+                            <th>Përdoruesi</th>
+                            <th>Statusi</th>
+                            <th>Shfaqje</th>
+                            <th>Veprime</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for car in all_cars %}
+                        <tr>
+                            <td>
+                                {% if car.status == 'confirmed' %}
+                                <a href="{{ url_for('vehicle_details', car_id=car.id) }}"><strong>{{ car.marka }} {{ car.modeli }}{% if car.viti %} ({{ car.viti }}){% endif %}</strong></a>
+                                {% else %}
+                                <strong>{{ car.marka }} {{ car.modeli }}{% if car.viti %} ({{ car.viti }}){% endif %}</strong>
+                                {% endif %}
+                            </td>
+                            <td>{{ car.first_name or '' }} {{ car.last_name or '' }}</td>
+                            <td>
+                                {% if car.status == 'confirmed' %}
+                                <span class="status status-confirmed">Publikuar</span>
+                                {% elif car.status == 'pending' %}
+                                <span class="status status-pending">Në pritje</span>
+                                {% else %}
+                                <span class="status status-declined">Refuzuar</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ car.views or 0 }}</td>
+                            <td>
+                                <div class="action-buttons">
+                                    <a class="btn-action btn-edit" href="{{ url_for('admin_car_edit', car_id=car.id) }}">Edito</a>
+                                    <form action="{{ url_for('admin_car_action', car_id=car.id, action='delete') }}" method="POST" class="inline-form" onsubmit="return confirm('Fshij këtë postim përgjithmonë?')">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn-action btn-delete">Fshij</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="5" class="empty-table-msg">Nuk ka postime ende.</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>
