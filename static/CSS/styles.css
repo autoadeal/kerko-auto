@@ -84,7 +84,7 @@ footer { background-color: var(--site-chrome); color: white; padding: 35px 0 20p
 .footer-nav a:hover { color: var(--primary-green); }
 .footer-bottom { border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px; text-align: center; font-size: 12px; color: #888; }
 .footer-developer-credit { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 8px; font-size: 10px; color: #777; }
-.footer-developer-credit img { display: block; width: auto; height: 26px; max-width: 140px; object-fit: contain; }
+.footer-developer-credit img { display: block; width: auto; height: 30px; max-width: 160px; object-fit: contain; }
 @media (max-width: 600px) {
   footer { padding: 20px 0; }
   .footer-nav { flex-direction: column; align-items: center; gap: 6px; flex-wrap: wrap; gap: 8px; justify-content: center; }
