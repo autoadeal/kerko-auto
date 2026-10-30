@@ -796,6 +796,10 @@ footer { background-color: var(--site-chrome); color: white; padding: 35px 0 20p
 .contact-form-input { width: 100%; padding: 12px; border: 1px solid #eee; border-radius: 8px; background: #ffffff; }
 .contact-form-textarea { width: 100%; padding: 12px; border: 1px solid #eee; border-radius: 8px; background: #ffffff; resize: none; }
 .contact-form-submit { padding: 15px; font-size: 16px; border-radius: 10px; }
+.contact-form-submit:disabled { cursor: wait; opacity: 0.75; }
+.contact-form-status { margin: -5px 0 0; font-size: 14px; font-weight: 600; }
+.contact-form-status--success { color: #16803c; }
+.contact-form-status--error { color: #c53030; }
 @media (max-width: 600px) {
   .contact-page-wrapper { padding: 0 3%; margin-top: -5px; }
   .contact-hero { padding: 40px 3%; }
